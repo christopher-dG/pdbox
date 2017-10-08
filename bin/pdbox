@@ -3,6 +3,7 @@
 import argparse
 import os
 import pdbox
+import sys
 
 FUNCS = {
     "get": pdbox.get,
@@ -11,20 +12,18 @@ FUNCS = {
 
 if __name__ != "__main__":
     print("pdbox script cannot be imorted; exiting")
-    exit(1)
+    sys.exit(1)
 
 # Add command-line arguments.
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "command",
     choices=FUNCS.keys(),
-    nargs=1,
     metavar="<command>",
     help="'get' or 'put'",
 )
 parser.add_argument(
     "filename",
-    nargs=1,
     metavar="<filename>",
     help="file to get or put",
 )
@@ -55,7 +54,7 @@ except KeyError:
                 TOKEN = pdbox.auth()
             except Exception as e:
                 print("%s\nAuthentication failed; exiting" % e)
-                exit(1)
+                sys.exit(1)
 
 # Run the command.
 FUNCS[args.command](TOKEN, args.filename, args.destination, args.force)
