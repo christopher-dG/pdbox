@@ -1,2 +1,2 @@
-def get(fn, dest=None):
+def get(token, fn, dest, force):
     pass

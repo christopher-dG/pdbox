@@ -5,6 +5,6 @@ setup(
     version="0.0.1",
     packages=["pdbox"],
     scripts=["bin/pdbox"],
-    install_requires=["dropbox"],
+    install_requires=["appdirs", "dropbox"],
     zip_safe=True,
 )

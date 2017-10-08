@@ -1,2 +1,2 @@
-def put(fn, dest=None):
+def put(token, fn, dest, force):
     pass

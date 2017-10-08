@@ -1,1 +1,64 @@
 #!/usr/bin/env python
+
+import appdirs
+import argparse
+import os
+import pdbox
+
+PDBOX = "pdbox"
+TOKEN_PATH = os.path.join(appdirs.user_data_dir(PDBOX), "pdbox_token")
+FUNCS = {
+    "get": pdbox.get,
+    "put": pdbox.put,
+}
+
+if __name__ != "__main__":
+    print("pdbox script cannot be imorted; exiting")
+    exit(1)
+
+# Get the user's API token.
+# Look for an environment variable first, then check for a dedicated file.
+try:
+    TOKEN = os.environ["PDBOX_TOKEN"]
+except KeyError:
+    try:
+        with open(TOKEN_PATH) as f:
+            TOKEN = f.read()
+    except FileNotFoundError:
+            try:
+                TOKEN = pdbox.auth()
+            except Exception as e:
+                print("%s\nAuthentication failed; exiting" % e)
+                exit(1)
+
+# Add command-line arguments.
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "command",
+    choices=FUNCS.keys(),
+    nargs=1,
+    metavar="<command>",
+    help="'get' or 'put'",
+)
+parser.add_argument(
+    "filename",
+    nargs=1,
+    metavar="<filename>",
+    help="file to get or put",
+)
+parser.add_argument(
+    "destination",
+    nargs="?",
+    default=None,
+    help="where to put the file (optional)",
+)
+parser.add_argument(
+    "-f",
+    "--force",
+    action="store_true",
+    help="overwrite existing files",
+)
+args = parser.parse_args()
+
+# Run the command.
+FUNCS[args.command](TOKEN, args.filename, args.destination, args.force)
