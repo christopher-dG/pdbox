@@ -47,11 +47,12 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-# Get the user's API token.
+# Get the user's OAuth2 token.
 # Look for an environment variable first, then check for a dedicated file.
-try:
+# If we don't find one, then generate one.
+if "PDBOX_TOKEN" in os.environ:
     token = os.environ["PDBOX_TOKEN"]
-except KeyError:
+else:
     try:
         with open(pdbox.TOKEN_PATH) as f:
             token = f.read()

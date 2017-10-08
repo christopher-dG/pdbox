@@ -1,11 +1,21 @@
 # pdbox
 
-**No-frills CLI for Dropbox.**
+**A no-frills CLI for Dropbox.**
 
 ## Installation
 
+With `pip`:
+
 ```
-$ pip install pdbox
+$ pip install git+https://github.com/christopher-dG/pdbox
+```
+
+Or from source:
+
+```
+$ git clone https://github.com/christopher-dG/pdbox
+$ cd pdbox
+$ python setup.py install
 ```
 
 ## Usage
@@ -39,3 +49,9 @@ This is not intended for "power users" looking for advanced sync
 functionality and more, but rather for those looking for a quick, easy way to
 access their files when the full Dropbox client isn't practical, such as
 headless VMs or low-resource servers.
+
+## Python 2
+
+This code is compatible with both Python 2 and 3 but
+[this bug with the Dropbox SDK](https://github.com/dropbox/dropbox-sdk-python/issues/85)
+may affect you, in which case I recommend that you use Python 3.

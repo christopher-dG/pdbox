@@ -1,4 +1,6 @@
 *.pyc
-**/__pycache__
-pdbox.egg-info
-/.app
+**/__pycache__/
+/pdbox.egg-info
+/build/
+/dist/
+/.env
