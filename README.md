@@ -17,8 +17,8 @@ $ pdbox get <file> [destination] [-f]
 
 ## Access Tokens
 
-To access Dropbox, an Oauth2 access token is required. `pdbox` will take care
-of this fore you, but if you already have a token and want to use it, you can
+To access Dropbox, an OAuth2 access token is required. `pdbox` will take care
+of this for you, but if you already have a token and want to use it, you can
 set the `PDBOX_TOKEN` environment variable.
 
 ## Motivation
