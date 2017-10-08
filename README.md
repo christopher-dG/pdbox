@@ -11,8 +11,17 @@ $ pip install pdbox
 ## Usage
 
 ```
-$ pdbox put <file> [destination] [-f]
-$ pdbox get <file> [destination] [-f]
+usage: pdbox [-h] [-y] [-f] <command> <filename> [destination]
+
+positional arguments:
+  <command>    'get' or 'put'
+  <filename>   file to get or put
+  destination  where to put the file (optional)
+
+optional arguments:
+  -h, --help   show this help message and exit
+  -y, --yes    don't prompt for confirmation
+  -f, --force  overwrite existing files
 ```
 
 ## Access Tokens

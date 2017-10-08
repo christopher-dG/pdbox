@@ -34,6 +34,12 @@ parser.add_argument(
     help="where to put the file (optional)",
 )
 parser.add_argument(
+    "-y",
+    "--yes",
+    action="store_false",
+    help="don't prompt for confirmation",
+)
+parser.add_argument(
     "-f",
     "--force",
     action="store_true",
@@ -44,17 +50,23 @@ args = parser.parse_args()
 # Get the user's API token.
 # Look for an environment variable first, then check for a dedicated file.
 try:
-    TOKEN = os.environ["PDBOX_TOKEN"]
+    token = os.environ["PDBOX_TOKEN"]
 except KeyError:
     try:
         with open(pdbox.TOKEN_PATH) as f:
-            TOKEN = f.read()
+            token = f.read()
     except FileNotFoundError:
             try:
-                TOKEN = pdbox.auth()
+                token = pdbox.auth()
             except Exception as e:
                 print("%s\nAuthentication failed; exiting" % e)
                 sys.exit(1)
 
 # Run the command.
-FUNCS[args.command](TOKEN, args.filename, args.destination, args.force)
+FUNCS[args.command](
+    token,
+    args.filename,
+    dest=args.destination,
+    force=args.force,
+    prompt=args.yes,
+)

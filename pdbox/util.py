@@ -1,3 +1,14 @@
+import os.path
+
+
+def normpath(path):
+    """Convert a local path into one compatible with Dropbox."""
+    path = "/%s" % path.replace(os.path.sep, "/")
+    while "//" in path:  # os.path.normpath won't work on Windows.
+        path = path.replace("//", "/")
+    return path
+
+
 def size(data):
     """Get the size of data."""
     size = len(data)
