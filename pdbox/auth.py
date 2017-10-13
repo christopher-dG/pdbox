@@ -1,11 +1,11 @@
 import dropbox
 import os
-from . import TOKEN_PATH
+import pdbox
 
 APP_KEY = "kkdoudk5jlebl37"
 
 
-def auth():
+def auth_flow():
     """Generate an OAuth2 access token."""
     auth_flow = dropbox.DropboxOAuth2FlowNoRedirect(APP_KEY, get_secret())
     print("1. Go to: %s" % auth_flow.start())
@@ -13,8 +13,8 @@ def auth():
     print("3. Copy the authorization code")
     auth_code = input("Enter the authorization code here: ").strip()
     token = auth_flow.finish(auth_code).access_token
-    os.makedirs(os.path.dirname(TOKEN_PATH), exist_ok=True)
-    with open(TOKEN_PATH, "w") as f:
+    os.makedirs(os.path.dirname(pdbox.TOKEN_PATH), exist_ok=True)
+    with open(pdbox.TOKEN_PATH, "w") as f:
         f.write(token)
     return token
 

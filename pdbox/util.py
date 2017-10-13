@@ -1,10 +1,19 @@
 import dropbox
 import os.path
+import sys
+
+
+def err(s):
+    """Print s as an error and exit."""
+    print(s, file=sys.stderr)
+    sys.exit(1)
 
 
 def normpath(path):
-    """Convert a local path into one compatible with Dropbox."""
-    path = "/%s" % path.replace(os.path.sep, "/")
+    """Convert `path` something that's compatible with Dropbox."""
+    if path.startswith("dbx://"):
+        path = path[6:]
+    path = "/" + path.replace(os.path.sep, "/")
     while "//" in path:  # os.path.normpath won't work on Windows.
         path = path.replace("//", "/")
     return path
@@ -27,12 +36,10 @@ def isize(n):
         return "%d B" % n
 
 
-def rsize(token, path):
-    """Get the size of a remote file."""
-    dbx = dropbox.Dropbox(token)
-    try:
-        result = dbx.files_get_metadata(path)
-    except dropbox.exceptions.ApiError as e:
-        return None
-    else:
-        return isize(result.size)
+def rsize(dbx, path):
+    """
+    Get the size of a remote file.
+    This may raise a `dropbox.exceptions.ApiError`.
+    """
+    result = dbx.files_get_metadata(path)
+    return isize(result.size)

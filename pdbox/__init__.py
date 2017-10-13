@@ -3,8 +3,7 @@ import os.path
 
 TOKEN_PATH = os.path.join(appdirs.user_data_dir("pdbox"), "pdbox_token")
 
-from .get import get  # noqa
-from .put import put  # noqa
-from .ls import ls  # noqa
-from .rm import rm  # noqa
-from .auth import auth  # noqa
+from . import argparse  # noqa
+from . import auth  # noqa
+
+from .cp import cp  # noqa

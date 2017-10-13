@@ -11,81 +11,7 @@ if __name__ != "__main__":
     sys.exit(1)
 
 # Add command-line arguments.
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    "-y",
-    "--yes",
-    action="store_true",
-    help="don't prompt for confirmation",
-)
-parser.add_argument(
-    "-f",
-    "--force",
-    action="store_true",
-    help="overwrite existing files",
-)
-
-subparsers = parser.add_subparsers(
-    dest="command",
-    help="command to execute",
-)
-subparsers.required = True
-
-get = subparsers.add_parser(
-    "get",
-    help="download from Dropbox",
-)
-get.set_defaults(func=pdbox.get)
-get.add_argument(
-    "source",
-    metavar="<source>",
-    help="file or directory to download",
-)
-get.add_argument(
-    "destination",
-    nargs="?",
-    default=None,
-    help="where to put the file/directory (optional)",
-)
-
-put = subparsers.add_parser(
-    "put",
-    help="upload to Dropbox",
-)
-put.set_defaults(func=pdbox.put)
-put.add_argument(
-    "source",
-    metavar="<source>",
-    help="file or directory to upload",
-)
-put.add_argument(
-    "destination",
-    nargs="?",
-    default=None,
-    help="where to put the file/directory (optional)",
-)
-
-ls = subparsers.add_parser(
-    "ls",
-    help="list directory contents",
-)
-ls.set_defaults(func=pdbox.ls)
-ls.add_argument(
-    "directory",
-    nargs="?",
-    default="",
-    help="directory to list (optional)",
-)
-
-rm = subparsers.add_parser(
-    "rm",
-    help="remove a file from Dropbox",
-)
-rm.set_defaults(func=pdbox.rm)
-rm.add_argument(
-    "path",
-    help="file to delete",
-)
+parser = pdbox.argparse.get_parser()
 
 # Get the user's OAuth2 token.
 # Look for an environment variable first, then check for a dedicated file.
@@ -98,7 +24,7 @@ else:
             token = f.read()
     except FileNotFoundError:
             try:
-                token = pdbox.auth()
+                token = pdbox.auth.auth_flow()
             except Exception as e:
                 print("%s\nAuthentication failed; exiting" % e)
                 sys.exit(1)
