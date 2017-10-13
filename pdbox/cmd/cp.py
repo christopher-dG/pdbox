@@ -1,6 +1,5 @@
-import dropbox
-
-from .util import err
+from dropbox import Dropbox
+from pdbox.util import err
 
 
 def cp(token, args):
@@ -11,7 +10,7 @@ def cp(token, args):
             "with the prefix 'dbx://'"
         )
 
-    dbx = dropbox.Dropbox(token)
+    dbx = Dropbox(token)
     if args.src.startswith("dbx://") and args.dst.startswith("dbx://"):
         cp_inside(dbx, args)
     elif args.src.startswith("dbx://"):

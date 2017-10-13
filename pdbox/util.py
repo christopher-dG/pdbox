@@ -9,8 +9,16 @@ def err(s):
     sys.exit(1)
 
 
+def execute(func, *args, **kwargs):
+    """Execute some function, and abort if it fails."""
+    try:
+        return func(args, kwargs)
+    except dropbox.exceptions.ApiError as e:
+        err(e)
+
+
 def normpath(path):
-    """Convert `path` something that's compatible with Dropbox."""
+    """Convert `path` into something that's compatible with Dropbox."""
     if path.startswith("dbx://"):
         path = path[6:]
     path = "/" + path.replace(os.path.sep, "/")

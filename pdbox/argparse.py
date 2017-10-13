@@ -8,6 +8,8 @@ def get_parser():
     subparsers = parser.add_subparsers(dest="cmd")
     subparsers.required = True
     parse_cp(subparsers)
+    parse_ls(subparsers)
+    parse_mb(subparsers)
     return parser
 
 
@@ -34,6 +36,7 @@ def parse_cp(subparsers):
         help="display operations without performing them",
     )
     cp.add_argument(
+        "-q",
         "--quiet",
         action="store_true",
         help="don't display operations",
@@ -59,7 +62,54 @@ def parse_cp(subparsers):
         help="only display errors and warnings",
     )
     cp.add_argument(
+        "-r",
         "--recursive",
         action="store_true",
         help="perform operations on all files under the specified directory",
+    )
+
+
+def parse_ls(subparsers):
+    """Add arguments for the ls command."""
+    ls = subparsers.add_parser(
+        "ls",
+        help="list a folder inside Dropbox",
+    )
+    ls.set_defaults(func=pdbox.ls)
+    ls.add_argument(
+        "path",
+        metavar="<path>",
+        nargs="?",
+        default="",
+        help="folder to list (leave empty to list root folder)",
+    )
+    ls.add_argument(
+        "-r",
+        "--recursive",
+        action="store_true",
+        help="perform operations on all files under the specified folder",
+    )
+    ls.add_argument(
+        "--human-readable",
+        action="store_true",
+        help="display file sizes in human-readable format",
+    )
+    ls.add_argument(
+        "--summarize",
+        action="store_true",
+        help="display summary information (number of objects, total size)",
+    )
+
+
+def parse_mb(subparsers):
+    """Add arguments for the mb command."""
+    mb = subparsers.add_parser(
+        "mb",
+        help="create a new folder inside Dropbox",
+    )
+    mb.set_defaults(func=pdbox.mb)
+    mb.add_argument(
+        "path",
+        metavar="<path>",
+        help="path to the new folder",
     )
