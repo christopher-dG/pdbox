@@ -3,3 +3,5 @@ from .ls import ls  # noqa
 from .mb import mb  # noqa
 from .mv import mv  # noqa
 from .rb import rb  # noqa
+from .rm import rm  # noqa
+from .sync import sync  # noqa

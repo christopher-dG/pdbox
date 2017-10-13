@@ -12,6 +12,8 @@ def get_parser():
     parse_mb(subparsers)
     parse_mv(subparsers)
     parse_rb(subparsers)
+    parse_rm(subparsers)
+    parse_sync(subparsers)
     return parser
 
 
@@ -118,6 +120,7 @@ def parse_mb(subparsers):
 
 
 def parse_mv(subparsers):
+    """Add arguments for the mv command."""
     mv = subparsers.add_parser(
         "mv",
         help="move a file or object inside Dropbox",
@@ -173,6 +176,7 @@ def parse_mv(subparsers):
 
 
 def parse_rb(subparsers):
+    """Add arguments for the rb command."""
     rb = subparsers.add_parser(
         "rb",
         help="delete a folder inside Dropbox",
@@ -188,4 +192,103 @@ def parse_rb(subparsers):
         "--force",
         action="store_true",
         help="delete non-empty folders",
+    )
+
+
+def parse_rm(subparsers):
+    """Add arguments for the rm command."""
+    rm = subparsers.add_parser(
+        "rm",
+        help="delete a file or directory inside Dropbox",
+    )
+    rm.set_defaults(func=pdbox.cmd.rm)
+    rm.add_argument(
+        "path",
+        metavar="<path>",
+        help="path to remove",
+    )
+    rm.add_argument(
+        "--dryrun",
+        action="store_true",
+        help="display operations without performing them",
+    )
+    rm.add_argument(
+        "-q",
+        "--quiet",
+        action="store_true",
+        help="don't display operations",
+    )
+    rm.add_argument(
+        "-r",
+        "--recursive",
+        action="store_true",
+        help="perform operations on all files under the specified directory",
+    )
+    # TODO: --include
+    # TODO: --exclude
+    rm.add_argument(
+        "--only-show-errors",
+        action="store_true",
+        help="only display errors and warnings",
+    )
+
+
+def parse_sync(subparsers):
+    """Add arguments for the sync command."""
+    sync = subparsers.add_parser(
+        "sync",
+        help="copy file to/from/inside Dropbox",
+    )
+    sync.set_defaults(func=pdbox.cmd.sync)
+    sync.add_argument(
+        "src",
+        metavar="<source>",
+        help="file or directory to copy",
+    )
+    sync.add_argument(
+        "dst",
+        metavar="<destination>",
+        help="destination file or directory",
+    )
+    sync.add_argument(
+        "--dryrun",
+        action="store_true",
+        help="display operations without performing them",
+    )
+    sync.add_argument(
+        "-q",
+        "--quiet",
+        action="store_true",
+        help="don't display operations",
+    )
+    # TODO: --include
+    # TODO: --exclude
+    symlinks = sync.add_mutually_exclusive_group()
+    symlinks.add_argument(
+        "--follow-symlinks",
+        dest="follow_symlinks",
+        action="store_true",
+        help="follow symbolic links on the local filesystem",
+    )
+    symlinks.add_argument(
+        "--no-follow-symlinks",
+        dest="follow_symlinks",
+        action="store_false",
+        help="don't follow symbolic links on the local filesystem",
+    )
+    sync.add_argument(
+        "--only-show-errors",
+        action="store_true",
+        help="only display errors and warnings",
+    )
+    sync.add_argument(
+        "-r",
+        "--recursive",
+        action="store_true",
+        help="perform operations on all files under the specified directory",
+    )
+    sync.add_argument(
+        "--delete",
+        action="store_true",
+        help="delete files present in <destination> but not <source>",
     )
