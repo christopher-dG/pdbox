@@ -5,21 +5,24 @@ import sys
 from .util import normpath
 
 
-def get(token, fn, dest=None, force=False, prompt=True):
+# def get(token, fn, dest=None, force=False, prompt=True):
+def get(token, args):
     """Download a file from Dropbox."""
     dbx = dropbox.Dropbox(token)
 
-    fn = normpath(fn)
-    if not dest:
+    fn = normpath(args.source)
+    if args.destination:
+        dest = args.destination
+    else:
         dest = os.path.relpath(os.path.basename(fn))
 
-    if not force and os.path.isfile(dest):
+    if not args.force and os.path.isfile(dest):
         print("A file already exists at %s; exiting" % dest)
         sys.exit(1)
 
     # Get confirmation.
     try:
-        if prompt:
+        if not args.yes:
             confirm = input("Download %s to %s? [Y/n]) " % (fn, dest))
         else:
             confirm = ""

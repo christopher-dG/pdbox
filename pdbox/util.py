@@ -1,3 +1,4 @@
+import dropbox
 import os.path
 
 
@@ -9,14 +10,29 @@ def normpath(path):
     return path
 
 
-def size(data):
-    """Get the size of data."""
-    size = len(data)
-    if size > 1024**3:
-        return "%.2f GB" % (size / 1024.0**3)
-    elif size > 1024**2:
-        return "%.2f MB" % (size / 1024.0**2)
-    elif size > 1024:
-        return "%.2f KB" % (size / 1024.0)
+def ssize(data):
+    """Get the size of a stream."""
+    return isize(len(data))
+
+
+def isize(n):
+    """Get a readable size from a number of bytes."""
+    if n > 1024**3:
+        return "%.2f GB" % (n / 1024.0**3)
+    elif n > 1024**2:
+        return "%.2f MB" % (n / 1024.0**2)
+    elif n > 1024:
+        return "%.2f KB" % (n / 1024.0)
     else:
-        return "%d B" % size
+        return "%d B" % n
+
+
+def rsize(token, path):
+    """Get the size of a remote file."""
+    dbx = dropbox.Dropbox(token)
+    try:
+        result = dbx.files_get_metadata(path)
+    except dropbox.exceptions.ApiError as e:
+        return None
+    else:
+        return isize(result.size)

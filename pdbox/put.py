@@ -2,42 +2,47 @@ import dropbox
 import os
 import sys
 
-from .util import normpath, size
+from .util import normpath, ssize
 
 
-def put(token, fn, dest=None, force=False, prompt=True):
+# def put(token, fn, dest=None, force=False, prompt=True):
+def put(token, args):
     """Upload a file to Dropbox."""
     dbx = dropbox.Dropbox(token)
 
     # Make sure the file exists.
-    if not os.path.isfile(fn):
-        print("File %s does not exist; exiting" % fn)
+    if not os.path.isfile(args.source):
+        print("File %s does not exist; exiting" % args.source)
         sys.exit(1)
 
     # If no destination is given, upload to the base directory.
-    if not dest:
-        dest = "/%s" % os.path.basename(fn)
+    if args.destination:
+        dest = args.destination
     else:
-        dest = normpath(dest)
+        dest = "/%s" % os.path.basename(args.source)
+    dest = normpath(dest)
 
-    with open(fn, "rb") as f:
+    with open(args.source, "rb") as f:
         data = f.read()
-    sz = size(data)
+    sz = ssize(data)
 
     # Get confirmation.
     try:
-        if prompt:
-            confirm = input("Upload %s to %s (%s)? [Y/n] " % (fn, dest, sz))
+        if not args.yes:
+            confirm = input(
+                "Upload %s to %s (%s)? [Y/n] "
+                % (args.source, dest, sz)
+            )
         else:
             confirm = ""
         if confirm.lower() in ["n", "no"]:
             raise KeyboardInterrupt
     except KeyboardInterrupt:
-        print("Cancelled.")
+        print("Cancelled")
         sys.exit(1)
 
     # Upload the file.
-    if force:
+    if args.force:
         mode = dropbox.files.WriteMode.overwrite
     else:
         mode = dropbox.files.WriteMode.add
@@ -45,8 +50,9 @@ def put(token, fn, dest=None, force=False, prompt=True):
         dbx.files_upload(data, dest, mode)
     except dropbox.exceptions.ApiError as e:
         if is_folder(e):  # Put the file into the folder.
-            dest += "/" + os.path.basename(fn)
-            put(token, fn, dest, force, prompt=False)
+            args.destination += "/" + os.path.basename(args.source)
+            args.yes = True
+            put(token, args)
         else:
             print("Error: %s" % e.error)
             sys.exit(1)
