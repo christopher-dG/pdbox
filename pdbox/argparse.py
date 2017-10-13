@@ -10,6 +10,8 @@ def get_parser():
     parse_cp(subparsers)
     parse_ls(subparsers)
     parse_mb(subparsers)
+    parse_mv(subparsers)
+    parse_rb(subparsers)
     return parser
 
 
@@ -19,7 +21,7 @@ def parse_cp(subparsers):
         "cp",
         help="copy file to/from/inside Dropbox",
     )
-    cp.set_defaults(func=pdbox.cp, follow_symlinks=True)
+    cp.set_defaults(func=pdbox.cmd.cp, follow_symlinks=True)
     cp.add_argument(
         "src",
         metavar="<source>",
@@ -75,7 +77,7 @@ def parse_ls(subparsers):
         "ls",
         help="list a folder inside Dropbox",
     )
-    ls.set_defaults(func=pdbox.ls)
+    ls.set_defaults(func=pdbox.cmd.ls)
     ls.add_argument(
         "path",
         metavar="<path>",
@@ -107,9 +109,83 @@ def parse_mb(subparsers):
         "mb",
         help="create a new folder inside Dropbox",
     )
-    mb.set_defaults(func=pdbox.mb)
+    mb.set_defaults(func=pdbox.cmd.mb)
     mb.add_argument(
         "path",
         metavar="<path>",
         help="path to the new folder",
+    )
+
+
+def parse_mv(subparsers):
+    mv = subparsers.add_parser(
+        "mv",
+        help="move a file or object inside Dropbox",
+    )
+    mv.set_defaults(func=pdbox.cmd.mv)
+    mv.add_argument(
+        "src",
+        metavar="<source>",
+        help="file or directory to move",
+    )
+    mv.add_argument(
+        "dst",
+        metavar="<destination>",
+        help="destination file or directory",
+    )
+    mv.add_argument(
+        "--dryrun",
+        action="store_true",
+        help="display operations without performing them",
+    )
+    mv.add_argument(
+        "-q",
+        "--quiet",
+        action="store_true",
+        help="don't display operations",
+    )
+    # TODO: --include
+    # TODO: --exclude
+    symlinks = mv.add_mutually_exclusive_group()
+    symlinks.add_argument(
+        "--follow-symlinks",
+        dest="follow_symlinks",
+        action="store_true",
+        help="follow symbolic links on the local filesystem",
+    )
+    symlinks.add_argument(
+        "--no-follow-symlinks",
+        dest="follow_symlinks",
+        action="store_false",
+        help="don't follow symbolic links on the local filesystem",
+    )
+    mv.add_argument(
+        "--only-show-errors",
+        action="store_true",
+        help="only display errors and warnings",
+    )
+    mv.add_argument(
+        "-r",
+        "--recursive",
+        action="store_true",
+        help="perform operations on all files under the specified directory",
+    )
+
+
+def parse_rb(subparsers):
+    rb = subparsers.add_parser(
+        "rb",
+        help="delete a folder inside Dropbox",
+    )
+    rb.set_defaults(func=pdbox.cmd.rb)
+    rb.add_argument(
+        "dir",
+        metavar="<directory>",
+        help="directory to remove",
+    )
+    rb.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        help="delete non-empty folders",
     )
