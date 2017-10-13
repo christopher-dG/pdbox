@@ -1,9 +1,8 @@
-from dropbox import Dropbox
+from pdbox import _dbx as dbx
 from pdbox.util import normpath
 
 
-def mv(token, args):
+def mv(args):
     """Move a file or directory inside Dropbox."""
-    dbx = Dropbox(token)
     src = normpath(args.src)
     dst = normpath(args.dest)

@@ -1,8 +1,8 @@
-from dropbox import Dropbox
+from pdbox import _dbx as dbx
 from pdbox.util import err
 
 
-def sync(token, args):
+def sync(args):
     """Synchronize directories to/from/inside Dropbox."""
     if not args.src.startswith("dbx://") and not args.dst.startswith("dbx://"):
         err(
@@ -10,25 +10,24 @@ def sync(token, args):
             "with the prefix 'dbx://'"
         )
 
-    dbx = Dropbox(token)
     if args.src.startswith("dbx://") and args.dst.startswith("dbx://"):
-        sync_inside(dbx, args)
+        sync_inside(args)
     elif args.src.startswith("dbx://"):
-        sync_from(dbx, args)
+        sync_from(args)
     else:
-        sync_to(dbx, args)
+        sync_to(args)
 
 
-def sync_inside(dbx, args):
+def sync_inside(args):
     """Copy a file or directory inside Dropbox."""
     pass
 
 
-def sync_from(dbx, args):
+def sync_from(args):
     """Copy a file or directory from Dropbox."""
     pass
 
 
-def sync_to(dbx, args):
+def sync_to(args):
     """Copy a file or directory to Dropbox."""
     pass

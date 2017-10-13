@@ -23,3 +23,7 @@ def get_secret():
     """Get the app secret."""
     # TODO: Actually solve this so that other people can use it.
     return os.environ["APP_SECRET"]
+
+
+def login(token):
+    pdbox._dbx = dropbox.Dropbox(token)

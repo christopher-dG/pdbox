@@ -1,8 +1,8 @@
-from dropbox import Dropbox
+from pdbox import _dbx as dbx
 from pdbox.util import err
 
 
-def cp(token, args):
+def cp(args):
     """Copy a file or directory to/from/inside Dropbox."""
     if not args.src.startswith("dbx://") and not args.dst.startswith("dbx://"):
         err(
@@ -10,7 +10,6 @@ def cp(token, args):
             "with the prefix 'dbx://'"
         )
 
-    dbx = Dropbox(token)
     if args.src.startswith("dbx://") and args.dst.startswith("dbx://"):
         cp_inside(dbx, args)
     elif args.src.startswith("dbx://"):

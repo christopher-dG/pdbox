@@ -1,7 +1,6 @@
-from dropbox import Dropbox
+from pdbox import _dbx as dbx
 from pdbox.util import normpath
 
 
-def rb(token, args):
-    dbx = Dropbox(token)
+def rb(args):
     path = normpath(args.dir)

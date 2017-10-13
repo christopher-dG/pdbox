@@ -29,5 +29,6 @@ else:
                 print("%s\nAuthentication failed; exiting" % e)
                 sys.exit(1)
 
+pdbox.auth.login(token)
 args = parser.parse_args()
-args.func(token, args)
+args.func(args)
