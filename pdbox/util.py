@@ -2,10 +2,12 @@ import dropbox
 import os.path
 import sys
 
+from pdbox import logger
+
 
 def err(s):
-    """Print s as an error and exit."""
-    print(s, file=sys.stderr)
+    """Log s as an error and exit."""
+    logger.error(s)
     sys.exit(1)
 
 

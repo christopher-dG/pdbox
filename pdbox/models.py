@@ -64,7 +64,7 @@ def from_path(path):
     try:
         metadata = pdbox.dbx.files_get_metadata(normpath(path))
     except dropbox.exceptions.ApiError as e:
-        pdbox.logger.warn(e)
+        pdbox.logger.debug(e)
         return None
     if isinstance(metadata, dropbox.files.FileMetadata):
         return File(metadata)

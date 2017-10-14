@@ -5,6 +5,12 @@ import pdbox
 def get_parser():
     """Parse argv into an argparse Namespace."""
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-d",
+        "--debug",
+        action="store_true",
+        help="show debug messages",
+    )
     subparsers = parser.add_subparsers(dest="cmd")
     subparsers.required = True
     parse_cp(subparsers)
@@ -21,7 +27,7 @@ def parse_cp(subparsers):
     """Add arguments for the cp command."""
     cp = subparsers.add_parser(
         "cp",
-        help="copy file to/from/inside Dropbox",
+        help="copy a file to/from/inside Dropbox",
     )
     cp.set_defaults(func=pdbox.cmd.cp, follow_symlinks=True)
     cp.add_argument(
@@ -245,7 +251,7 @@ def parse_sync(subparsers):
     """Add arguments for the sync command."""
     sync = subparsers.add_parser(
         "sync",
-        help="copy file to/from/inside Dropbox",
+        help="synchronize a folder to/from/inside Dropbox",
     )
     sync.set_defaults(func=pdbox.cmd.sync)
     sync.add_argument(

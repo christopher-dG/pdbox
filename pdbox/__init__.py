@@ -4,10 +4,8 @@ import os.path
 
 logger = logging.getLogger("pdbox")
 handler = logging.StreamHandler()
-formatter = logging.Formatter(
-    "%(asctime)s %(name) %(levelname)s %(message)s"
-)
-logger.setLevel(logging.DEBUG)
+formatter = logging.Formatter("%(levelname)s: %(message)s")
+logger.setLevel(logging.ERROR)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 

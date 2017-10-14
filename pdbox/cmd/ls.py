@@ -1,3 +1,4 @@
+from pdbox import logger
 from pdbox.models import from_path, Folder
 from pdbox.util import err, isize
 from tabulate import tabulate
@@ -5,9 +6,13 @@ from tabulate import tabulate
 
 def ls(args):
     """List a directory inside Dropbox."""
-    folder = from_path(args.path)
+    try:
+        folder = from_path(args.path)
+    except Exception as e:  # The path probably doesn't exist.
+        logger.debug(e)
+        pass
     if not isinstance(folder, Folder):
-        err("%s is not a folder")
+        err("%s is not a folder" % args.path)
     entries = folder.contents()
     if not entries:
         print("%s: empty" % folder.path)

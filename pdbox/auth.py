@@ -16,6 +16,7 @@ def auth_flow():
     os.makedirs(os.path.dirname(pdbox.TOKEN_PATH), exist_ok=True)
     with open(pdbox.TOKEN_PATH, "w") as f:
         f.write(token)
+        pdbox.logger.debug("Created new token at %s" % pdbox.TOKEN_PATH)
     return token
 
 
