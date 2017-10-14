@@ -1,6 +1,5 @@
 import dropbox
 import pdbox
-from collections import OrderedDict
 from pdbox.util import normpath
 
 
@@ -22,6 +21,7 @@ class File(DbxObj):
         else:
             self.folder = "/"
         self.size = metadata.size
+        self.date = metadata.client_modified
 
     def __repr__(self):
         return "File{%s}" % self.path
@@ -31,30 +31,28 @@ class Folder(DbxObj):
     """A Dropbox folder."""
     def __init__(self, metadata, root=False):
         if root:
+            # When handling this folder, calls to dbx.files_list_folder
+            # need to convert path to an empty string.
             self.id = -1
             self.name = "/"
-            self.path = ""
+            self.path = "/"
         else:
             super(Folder, self).__init__(metadata)
 
     def __repr__(self):
         return "Folder{%s}" % self.path
 
-    def traverse(self, recursive=False):
-        """Get a list of this folder's contents."""
+    def contents(self):
+        """Get a list of this folder's contents (not recursive)."""
         try:
-            result = pdbox.dbx.files_list_folder(self.path)
+            if self.path == "/":
+                result = pdbox.dbx.files_list_folder("")
+            else:
+                result = pdbox.dbx.files_list_folder(self.path)
         except dropbox.exceptions.ApiError as e:
             pdbox.logger.warn(e)
             return []
-        entries = [self] + [gen_entry(e) for e in result.entries if e]
-
-        if recursive:
-            # Skip the first entry, it's the folder we're already processing.
-            for folder in filter(lambda e: isinstance(e, Folder), entries[1:]):
-                entries.extend(folder.traverse(recursive=True))
-
-        return entries
+        return [self] + [gen_entry(e) for e in result.entries if e]
 
 
 def from_path(path):
@@ -90,17 +88,3 @@ def gen_entry(metadata):
             "Expected file or folder metadata, got %s" % type(metadata),
         )
         return None
-
-
-def group(objs):
-    """
-    Group a list of DbxObjects by folder.
-    The keys in the returned OrderedDict are ordered shallowest first.
-    """
-    groups = OrderedDict(
-        {f: [] for f in filter(lambda o: isinstance(o, Folder), objs)}
-    )
-    lookup = {f.path.lower(): f for f in groups.keys()}
-    for f in filter(lambda o: isinstance(o, File), objs):
-        groups[lookup[f.folder.lower()]].append(f)
-    return groups

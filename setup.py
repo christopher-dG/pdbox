@@ -5,6 +5,6 @@ setup(
     version="0.0.1",
     packages=["pdbox"],
     scripts=["bin/pdbox"],
-    install_requires=["appdirs", "dropbox"],
+    install_requires=["appdirs", "dropbox", "tabulate"],
     zip_safe=True,
 )

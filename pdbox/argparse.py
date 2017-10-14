@@ -94,6 +94,14 @@ def parse_ls(subparsers):
         help="perform operations on all files under the specified folder",
     )
     ls.add_argument(
+        "-m",
+        "--maxdepth",
+        type=int,
+        nargs="?",
+        default=-1,
+        help="maximum depth of recursion",
+    )
+    ls.add_argument(
         "--human-readable",
         action="store_true",
         help="display file sizes in human-readable format",
