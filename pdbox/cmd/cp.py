@@ -1,4 +1,3 @@
-from pdbox import _dbx as dbx
 from pdbox.util import err
 
 
@@ -11,14 +10,14 @@ def cp(args):
         )
 
     if args.src.startswith("dbx://") and args.dst.startswith("dbx://"):
-        cp_inside(dbx, args)
+        cp_inside(args)
     elif args.src.startswith("dbx://"):
-        cp_from(dbx, args)
+        cp_from(args)
     else:
-        cp_to(dbx, args)
+        cp_to(args)
 
 
-def cp_inside(dbx, args):
+def cp_inside(args):
     """Copy a file or directory inside Dropbox."""
     pass
 

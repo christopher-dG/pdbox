@@ -1,4 +1,4 @@
-from pdbox import _dbx as dbx
+from pdbox import dbx
 from pdbox.util import normpath
 
 

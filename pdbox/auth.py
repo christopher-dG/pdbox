@@ -26,4 +26,4 @@ def get_secret():
 
 
 def login(token):
-    pdbox._dbx = dropbox.Dropbox(token)
+    pdbox.dbx = dropbox.Dropbox(token)

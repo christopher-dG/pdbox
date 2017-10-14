@@ -10,9 +10,6 @@ if __name__ != "__main__":
     print("pdbox script cannot be imorted; exiting")
     sys.exit(1)
 
-# Add command-line arguments.
-parser = pdbox.argparse.get_parser()
-
 # Get the user's OAuth2 token.
 # Look for an environment variable first, then check for a dedicated file.
 # If we don't find one, then generate one.
@@ -30,5 +27,6 @@ else:
                 sys.exit(1)
 
 pdbox.auth.login(token)
+parser = pdbox.argparse.get_parser()
 args = parser.parse_args()
 args.func(args)

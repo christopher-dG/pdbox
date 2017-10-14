@@ -1,4 +1,3 @@
-from pdbox import _dbx as dbx
 from pdbox.util import err
 
 
