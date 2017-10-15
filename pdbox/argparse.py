@@ -1,8 +1,9 @@
 import argparse
+import logging
 import pdbox
 
 
-def get_parser():
+def parse_args():
     """Parse argv into an argparse Namespace."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -20,7 +21,10 @@ def get_parser():
     parse_rb(subparsers)
     parse_rm(subparsers)
     parse_sync(subparsers)
-    return parser
+    args = parser.parse_args()
+    if args.debug:
+        pdbox._logger.setLevel(logging.DEBUG)
+    return args
 
 
 def parse_cp(subparsers):
