@@ -7,3 +7,8 @@ if __name__ == "__main__":
     args = pdbox.argparse.parse_args()
     pdbox.auth.login(pdbox.auth.get_token())
     args.func(args)
+    try:
+        if args.dryrun:
+            pdbox.info("--dryrun is set: No operations were performed")
+    except AttributeError:
+        pass

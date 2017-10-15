@@ -13,6 +13,10 @@ to [create your own app](https://www.dropbox.com/developers/apps/create) with
 full Dropbox access and store its credentials in `$PDBOX_KEY` and
 `$PDBOX_SECRET` environment variables if you wish to use this.
 
+Additionally, I make no guarantees about the correctness of this software, and
+I will take no responsibility for any data loss that may occur (although I
+will apologize profusely).
+
 ## Installation
 
 With `pip`:
@@ -59,7 +63,7 @@ set the `PDBOX_TOKEN` environment variable.
 
 > Dropbox already has a CLI, what's the point?
 
-Installing `dropbox-cli` on Arch Linux uses 147 MB, that's a lot!  
+Installing `dropbox-cli` on Arch Linux uses 147 MB, that's a lot!
 This is not intended for "power users" looking for advanced sync
 functionality and more, but rather for those looking for a quick, easy way to
 access their files when the full Dropbox client isn't practical, such as

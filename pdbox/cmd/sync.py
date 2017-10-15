@@ -1,8 +1,23 @@
-from pdbox.util import fail
+import os.path
+import pdbox
+
+from pdbox.models import from_local, from_remote, File, LocalFolder
+from pdbox.util import fail, normpath
 
 
 def sync(args):
-    """Synchronize directories to/from/inside Dropbox."""
+    """
+    Synchronize directories to/from/inside Dropbox.
+
+    args fields:
+    - src (string)
+    - dst (string)
+    - dryrun (bool)
+    - quiet (bool)
+    - follow_symlinks (bool)
+    - only_show_errors (bool)
+    - delete (bool)
+    """
     if not args.src.startswith("dbx://") and not args.dst.startswith("dbx://"):
         fail(
             "At least one of <source> or <destination> must be a Dropbox path "
@@ -30,4 +45,23 @@ def sync_from(args):
 
 def sync_to(args):
     """Synchronize a directory to Dropbox."""
-    pass
+    src = os.path.normpath(args.src)
+    dest = normpath(args.dst)
+
+    folder = from_local(src, args)
+    if not folder:
+        fail("<source> does not exist", args)
+    if not isinstance(folder, LocalFolder):
+        fail("<source> is not a folder, use cp to upload files", args)
+    if folder.islink and not args.follow_symlinks:
+        fail("<source> is a symlink and --no-follow-symlinks is set", args)
+
+    existing = from_remote(dest, args)
+    if existing and isinstance(existing, File):
+        fail("%s already exists as a file" % existing.dbx_uri())
+
+    try:
+        folder.sync(dest, args)
+    except Exception as e:
+        pdbox.debug(e)
+        fail("Upload failed")

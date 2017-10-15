@@ -76,12 +76,6 @@ def parse_cp(subparsers):
         help="only display errors and warnings",
     )
     cp.add_argument(
-        "-r",
-        "--recursive",
-        action="store_true",
-        help="perform operations on all files under the specified directory",
-    )
-    cp.add_argument(
         "-c",
         "--chunksize",
         type=float,
@@ -198,6 +192,14 @@ def parse_mv(subparsers):
         action="store_true",
         help="perform operations on all files under the specified directory",
     )
+    mv.add_argument(
+        "-c",
+        "--chunksize",
+        type=float,
+        nargs="?",
+        default=149,  # Dropbox maximum is 150 MB.
+        help="chunk size in MB for splitting large uploads",
+    )
 
 
 def parse_rb(subparsers):
@@ -307,13 +309,15 @@ def parse_sync(subparsers):
         help="only display errors and warnings",
     )
     sync.add_argument(
-        "-r",
-        "--recursive",
-        action="store_true",
-        help="perform operations on all files under the specified directory",
-    )
-    sync.add_argument(
         "--delete",
         action="store_true",
         help="delete files present in <destination> but not <source>",
+    )
+    sync.add_argument(
+        "-c",
+        "--chunksize",
+        type=float,
+        nargs="?",
+        default=149,  # Dropbox maximum is 150 MB.
+        help="chunk size in MB for splitting large uploads",
     )

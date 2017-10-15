@@ -3,7 +3,7 @@ import math
 import os.path
 import pdbox
 
-from pdbox.util import fail, isize, normpath
+from pdbox.util import fail, normpath
 
 
 class DbxObj(object):
@@ -15,6 +15,15 @@ class DbxObj(object):
 
     def dbx_uri(self):
         return "dbx:/%s" % self.path
+
+    def delete(self, args):
+        if not args.dryrun:
+            try:
+                pdbox.dbx.files_delete_v2(self.path)
+            except dropbox.exceptions.ApiError as e:
+                pdbox.debug(e)
+                pdbox.error("Deleting %s failed" % self.dbx_uri())
+        pdbox.info("Deleted %s" % self.dbx_uri())
 
 
 class File(DbxObj):
@@ -49,7 +58,10 @@ class Folder(DbxObj):
         return "Folder{%s}" % self.path
 
     def contents(self, args=None):
-        """Get a list of this folder's contents (not recursive)."""
+        """
+        Get a list of this folder's contents (not recursive).
+        The first entry is itself.
+        """
         try:
             if self.path == "/":
                 result = pdbox.dbx.files_list_folder("")
@@ -106,6 +118,8 @@ class LocalObject(object):
     """
     def __init__(self, path):
         self.path = os.path.abspath(path)
+        self.name = os.path.basename(self.path)
+        self.islink = os.path.islink(self.path)
 
 
 class LocalFile(LocalObject):
@@ -123,18 +137,12 @@ class LocalFile(LocalObject):
     def upload(self, dest, args):
         """
         Upload a file to Dropbox. This assumes that all appropriate checks
-        have already been made. THIS WILL OVERWRITE EXISTING FILES!!!
+        have already been made. THIS WILL OVERWRITE EXISTING DATA!!!
         """
-        pdbox.info(
-            "Uploading %s to %s (%s)"
-            % (self.path, dest, isize(self.size)),
-            args
-        )
-
         if not args.dryrun:
             mode = dropbox.files.WriteMode.overwrite  # !!!
             chunk = int(args.chunksize * 1024 * 1024)
-            pdbox.debug("Chunk size is %f MB" % args.chunksize, args)
+            pdbox.debug("Chunk size is %.2f MB" % args.chunksize, args)
 
             if self.size < chunk:
                 with open(self.path, "rb") as f:
@@ -143,7 +151,10 @@ class LocalFile(LocalObject):
                         meta = pdbox.dbx.files_upload(f.read(), dest, mode)
                     except dropbox.exceptions.ApiError as e:
                         pdbox.debug(e, args)
-                        fail("Upload failed", args)
+                        # Don't use fail here, we will still want to try
+                        # uploading more files in a folder.
+                        pdbox.error("Uploading dbx:/%s failed", dest, args)
+                        return
 
             else:
                 nchunks = math.ceil(self.size / chunk)
@@ -180,7 +191,7 @@ class LocalFile(LocalObject):
                     )
             pdbox.debug("Metadata response: %s" % meta, args)
 
-        pdbox.info("Uploaded %s to %s" % (self.path, dest), args)
+        pdbox.info("Uploaded %s to dbx:/%s" % (self.path, dest), args)
 
 
 class LocalFolder(LocalObject):
@@ -192,8 +203,11 @@ class LocalFolder(LocalObject):
         super(LocalFolder, self).__init__(path)
 
     def contents(self, args=None):
-        """Get a list of this folder's contents (not recursive)."""
-        entries = []
+        """
+        Get a list of this folder's contents (not recursive).
+        The first entry is the folder itself.
+        """
+        entries = [self]
         for entry in os.walk(self.path):
             entries.extend(
                 LocalFolder(os.path.join(entry[0], f), args) for f in entry[1],
@@ -202,6 +216,42 @@ class LocalFolder(LocalObject):
                 LocalFile(os.path.join(entry[0], f), args) for f in entry[2],
             )
         return entries
+
+    def sync(self, dest, args=None):
+        """
+        Synchronize this folders's contents to Dropbox.
+        THIS WILL OVERWRITE EXISTING DATA!!!
+        """
+        existing = from_remote(dest, args)
+        if not isinstance(existing, Folder):
+            if not args.dryrun:
+                try:
+                    pdbox.dbx.files_create_folder_v2(dest)
+                except dropbox.exceptions.ApiError as e:
+                    pdbox.debug(e)
+                    pdbox.error("Creating new folder dbx:/%s failed" % dest)
+                    return
+            pdbox.info("Created new folder dbx:/%s" % dest)
+
+            remote_contents = []
+        else:
+            # Ignore the directory itself.
+            remote_contents = existing.contents(args)[1:]
+
+        # Ignore the folder itself, we've already created it.
+        contents = self.contents(args)[1:]
+
+        if args.delete and remote_contents:
+            # Delete anything in the remote folder not in the local one.
+            names = [e.name for e in contents]
+            for entry in remote_contents:
+                if entry.name not in names:
+                    entry.delete(args)
+
+        for entry in contents:
+            # Upload the contents.
+            func = entry.upload if isinstance(entry, LocalFile) else entry.sync
+            func("%s/%s" % (dest, entry.name), args)
 
 
 def from_local(path, args=None):

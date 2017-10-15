@@ -14,9 +14,11 @@ def ls(args):
 
     if not isinstance(folder, Folder):
         fail("%s is not a folder" % args.path, args)
+
     entries = folder.contents(args)
+
     if not entries:
-        print("%s: empty" % folder.path)
+        print("%s: no files or folders" % folder.dbx_uri())
     else:
         display(entries, args)
 
@@ -27,9 +29,10 @@ def display(entries, args, depth=1):
         print("%s: no files or folders\n" % entries[0].path)
         return
 
-    rows = [[entries[0].path, "t", "size", "modified"]]
+    rows = [[entries[0].dbx_uri(), "t", "size", "modified"]]
     nfiles = 0
     tsize = 0
+
     for e in entries[1:]:  # Skip the first entry (the directory itself).
         if isinstance(e, Folder):
             rows.append([e.name, "d", 0, ""])
@@ -38,6 +41,7 @@ def display(entries, args, depth=1):
             tsize += e.size
             sz = isize(e.size) if args.human_readable else e.size
             rows.append([e.name, "f", sz, e.date])
+
     print(tabulate(rows, headers="firstrow"))
 
     if args.summarize:
