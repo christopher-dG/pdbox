@@ -1,6 +1,21 @@
+import dropbox
 import os.path
 import pdbox
 import sys
+
+
+def execute(ns, func, *args, **kwargs):
+    """
+    Execute a method and return its output, logging its error if it raises.
+    First argument is an argparse.Namespace, second is the method to call.
+    Raises: dropbox.exceptionos.ApiError
+    """
+
+    try:
+        return func(*args, **kwargs)
+    except dropbox.exceptions.ApiError as e:
+        pdbox.debug("dbx.%s: %s" % (func.__name__, e.error), ns)
+        raise e
 
 
 def fail(s, args=None):

@@ -37,12 +37,12 @@ def parse_cp(subparsers):
     cp.add_argument(
         "src",
         metavar="<source>",
-        help="file or directory to copy",
+        help="file or folder to copy",
     )
     cp.add_argument(
         "dst",
         metavar="<destination>",
-        help="destination file or directory",
+        help="destination file or folder",
     )
     cp.add_argument(
         "--dryrun",
@@ -148,12 +148,12 @@ def parse_mv(subparsers):
     mv.add_argument(
         "src",
         metavar="<source>",
-        help="file or directory to move",
+        help="file or folder to move",
     )
     mv.add_argument(
         "dst",
         metavar="<destination>",
-        help="destination file or directory",
+        help="destination file or folder",
     )
     mv.add_argument(
         "--dryrun",
@@ -190,7 +190,7 @@ def parse_mv(subparsers):
         "-r",
         "--recursive",
         action="store_true",
-        help="perform operations on all files under the specified directory",
+        help="perform operations on all files under the specified folder",
     )
     mv.add_argument(
         "-c",
@@ -211,8 +211,8 @@ def parse_rb(subparsers):
     rb.set_defaults(func=pdbox.cmd.rb)
     rb.add_argument(
         "dir",
-        metavar="<directory>",
-        help="directory to remove",
+        metavar="<folder>",
+        help="folder to remove",
     )
     rb.add_argument(
         "-f",
@@ -226,7 +226,7 @@ def parse_rm(subparsers):
     """Add arguments for the rm command."""
     rm = subparsers.add_parser(
         "rm",
-        help="delete a file or directory inside Dropbox",
+        help="delete a file or folder inside Dropbox",
     )
     rm.set_defaults(func=pdbox.cmd.rm)
     rm.add_argument(
@@ -249,7 +249,7 @@ def parse_rm(subparsers):
         "-r",
         "--recursive",
         action="store_true",
-        help="perform operations on all files under the specified directory",
+        help="perform operations on all files under the specified folder",
     )
     # TODO: --include
     # TODO: --exclude
@@ -270,12 +270,12 @@ def parse_sync(subparsers):
     sync.add_argument(
         "src",
         metavar="<source>",
-        help="file or directory to copy",
+        help="file or folder to copy",
     )
     sync.add_argument(
         "dst",
         metavar="<destination>",
-        help="destination file or directory",
+        help="destination file or folder",
     )
     sync.add_argument(
         "--dryrun",

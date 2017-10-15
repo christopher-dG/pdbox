@@ -35,7 +35,6 @@ def test_local_file():
     assert_raises(ValueError, LocalFile, testdir)
 
     f = LocalFile(testfile)
-    assert f
     assert f.path == os.path.join(os.getcwd(), testfile)
     assert f.size == 0
 
@@ -58,7 +57,7 @@ def test_local_folder():
     f = LocalFolder(testdir)
     assert f
     assert f.path == os.path.join(os.getcwd(), testdir)
-    assert not f.contents()  # Empty.
+    assert f.contents() == [f]
 
     f = LocalFolder(tempdir)
     os.mknod(os.path.join(tempdir, "a"))
@@ -67,6 +66,7 @@ def test_local_folder():
     os.mknod(os.path.join(tempdir, "c", "d"))
     contents = f.contents()
     assert set([os.path.relpath(f.path) for f in contents]) == set([
+        tempdir,
         os.path.join(tempdir, "a"),
         os.path.join(tempdir, "b"),
         os.path.join(tempdir, "c"),

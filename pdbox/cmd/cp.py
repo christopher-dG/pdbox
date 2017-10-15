@@ -1,3 +1,4 @@
+import dropbox
 import os.path
 
 from pdbox.models import from_local, from_remote, File, LocalFolder
@@ -33,39 +34,50 @@ def cp(args):
 
 
 def cp_inside(args):
-    """Copy a file or directory inside Dropbox."""
+    """Copy a file inside Dropbox."""
     pass
 
 
 def cp_from(args):
-    """Copy a file or directory from Dropbox."""
+    """Copy a file from Dropbox."""
     pass
 
 
 def cp_to(args):
-    """Copy a file or directory to Dropbox."""
+    """Copy a file to Dropbox."""
     src = os.path.normpath(args.src)
     dest = normpath(args.dst)
 
-    local = from_local(src, args)
-    if not local:
-        fail("%s does not exist locally" % src, args)
+    try:
+        local = from_local(src, args)
+    except ValueError as e:
+        fail(e, args)
+
     if isinstance(local, LocalFolder):
         fail("%s is a folder, use sync to upload folders", src, args)
     if local.islink and not args.follow_symlinks:
         fail("%s is a symlink and --no-follow-symlinks is set", src, args)
 
-    existing = from_remote(dest, args)
-    if existing and not isinstance(existing, File):  # Is a folder.
-        fail("%s is a folder" % existing.dbx_uri(), args)
-    if existing and not args.quiet and not args.only_show_errors:
+    try:
+        remote = from_remote(dest, args)
+    except Exception:  # Remote file probably does not exist.
+        remote = None
+
+    if remote and not isinstance(remote, File):  # Is a folder.
+        fail("%s is a folder" % remote.dbx_uri(), args)
+
+    if remote and not args.quiet and not args.only_show_errors:
+        # File exists, prompt for overwrite confirmation.
         try:
             confirm = input(
-                "File %s exists: overwrite? [y/N] " % existing.dbx_uri(),
+                "File %s exists: overwrite? [y/N] " % remote.dbx_uri(),
             )
         except KeyboardInterrupt:
             confirm = "n"
         if confirm.lower() not in ["y", "yes"]:
             fail("Cancelled", args)
 
-    local.upload(dest, args)
+    try:
+        local.upload(dest, args)
+    except dropbox.exceptions.ApiError:
+        fail("Uploading %s to dbx:/%s failed" % (src, dest), args)

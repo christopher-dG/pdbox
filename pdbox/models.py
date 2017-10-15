@@ -3,7 +3,7 @@ import math
 import os.path
 import pdbox
 
-from pdbox.util import fail, normpath
+from pdbox.util import execute, normpath
 
 
 class DbxObj(object):
@@ -17,12 +17,12 @@ class DbxObj(object):
         return "dbx:/%s" % self.path
 
     def delete(self, args):
+        """
+        Delete ths file or folder.
+        Raises: dropbox.exceptions.ApiError(dropbox.files.DeleteError)
+        """
         if not args.dryrun:
-            try:
-                pdbox.dbx.files_delete_v2(self.path)
-            except dropbox.exceptions.ApiError as e:
-                pdbox.debug(e)
-                pdbox.error("Deleting %s failed" % self.dbx_uri())
+            execute(args, pdbox.dbx.files_delete_v2, self.path)
         pdbox.info("Deleted %s" % self.dbx_uri())
 
 
@@ -36,7 +36,7 @@ class File(DbxObj):
         else:
             self.folder = "/"
         self.size = metadata.size
-        self.date = metadata.client_modified
+        self.date = metadata.server_modified
 
     def __repr__(self):
         return "File{%s}" % self.path
@@ -61,54 +61,58 @@ class Folder(DbxObj):
         """
         Get a list of this folder's contents (not recursive).
         The first entry is itself.
+        Raises: dropbox.exceptions.ApiError(dropbox.files.ListFolderError)
         """
-        try:
-            if self.path == "/":
-                result = pdbox.dbx.files_list_folder("")
-            else:
-                result = pdbox.dbx.files_list_folder(self.path)
-        except dropbox.exceptions.ApiError as e:
-            pdbox.warn(e, args)
-            return []
-        return [self] + [gen_entry(e, args) for e in result.entries if e]
+        if self.path == "/":
+            result = execute(args, pdbox.dbx.files_list_folder, "")
+        else:
+            result = execute(args, pdbox.dbx.files_list_folder, self.path)
+
+        entries = [self]
+        for entry in result.entries:
+            try:
+                entries.append(gen_entry(entry, args))
+            except TypeError as e:
+                pdbox.debug(e, args)
+        return entries
 
 
 def from_remote(path, args=None):
-    """Generate a File or Folder from the given path, or None on failure."""
+    """
+    Generate a File or Folder from the given path.
+    Raises:
+    - dropbox.exceptions.ApiError(dropbox.files.GetMetadataError)
+    - Exception
+    """
     path = normpath(path)
     if path == "/":  # get_metadata on the root folder is not supported.
         return Folder(None, root=True)
 
-    try:
-        metadata = pdbox.dbx.files_get_metadata(normpath(path))
-    except dropbox.exceptions.ApiError as e:
-        pdbox.debug(e, args)
-        return None
+    metadata = execute(args, pdbox.dbx.files_get_metadata, normpath(path))
 
     if isinstance(metadata, dropbox.files.FileMetadata):
         return File(metadata)
     elif isinstance(metadata, dropbox.files.FolderMetadata):
         return Folder(metadata)
+    elif isinstance(metadata, dropbox.files.DeletedMetadata):
+        raise Exception("File/folder does not exist, but was recently deleted")
     else:
-        pdbox.debug(
-            "Expected file/folder metadata, got %s" % type(metadata),
-            args,
-        )
-        return None
+        raise Exception("Unexpected return from get_metadata: %s" % metadata)
 
 
 def gen_entry(metadata, args=None):
-    """Generate a File or Folder from a metadata object, or None on failure."""
+    """
+    Generate a File or Folder from a metadata object.
+    Raises: TypeError
+    """
     if isinstance(metadata, dropbox.files.FileMetadata):
         return File(metadata)
     elif isinstance(metadata, dropbox.files.FolderMetadata):
         return Folder(metadata)
     else:
-        pdbox.debug(
+        raise TypeError(
             "Expected file/folder metadata, got %s " % type(metadata),
-            args,
         )
-        return None
 
 
 class LocalObject(object):
@@ -125,12 +129,11 @@ class LocalObject(object):
 class LocalFile(LocalObject):
     """A file on disk."""
     def __init__(self, path, args=None):
-        if not os.path.isfile(path):
-            pdbox.debug(
-                "Local file %s does not exist" % path,
-                args,
-            )
+        """Raises: ValueError"""
+        if not os.path.exists(path):
             raise ValueError("Local file %s does not exist" % path)
+        if not os.path.isfile(path):
+            raise ValueError("%s is a folder" % path)
         self.size = os.path.getsize(path)
         super(LocalFile, self).__init__(path)
 
@@ -138,6 +141,10 @@ class LocalFile(LocalObject):
         """
         Upload a file to Dropbox. This assumes that all appropriate checks
         have already been made. THIS WILL OVERWRITE EXISTING DATA!!!
+        Raises:
+        - dropbox.exceptions.ApiError(dropbox.files.UploadError)
+        - dropbox.exceptions.ApiError(dropbox.files.UploadSessionLookupError)
+        - dropbox.exceptions.ApiError(dropbox.files.UploadSessionFinishError)
         """
         if not args.dryrun:
             mode = dropbox.files.WriteMode.overwrite  # !!!
@@ -146,60 +153,64 @@ class LocalFile(LocalObject):
 
             if self.size < chunk:
                 with open(self.path, "rb") as f:
-
-                    try:
-                        meta = pdbox.dbx.files_upload(f.read(), dest, mode)
-                    except dropbox.exceptions.ApiError as e:
-                        pdbox.debug(e, args)
-                        # Don't use fail here, we will still want to try
-                        # uploading more files in a folder.
-                        pdbox.error("Uploading dbx:/%s failed", dest, args)
-                        return
-
-            else:
-                nchunks = math.ceil(self.size / chunk)
-                with open(self.path, "rb") as f:
-                    start = pdbox.dbx.files_upload_session_start(f.read(1))
-                    cursor = dropbox.files.UploadSessionCursor(
-                        start.session_id,
-                        1,
-                    )
-                    i = 1
-                    while self.size - f.tell() > chunk:
-                        if not args.quiet and not args.only_show_errors:
-                            pdbox.debug(
-                                "Uploading chunk %d/%d" % (i, nchunks),
-                                args,
-                            )
-                        i += 1
-
-                        try:
-                            pdbox.dbx.files_upload_session_append_v2(
-                                f.read(chunk),
-                                cursor,
-                            )
-                        except dropbox.exceptions.ApiError as e:
-                            pdbox.debug(e, args)
-                            fail("Upload failed", args)
-
-                        cursor.offset += chunk
-
-                    meta = pdbox.dbx.files_upload_session_finish(
+                    meta = execute(
+                        args,
+                        pdbox.dbx.files_upload,
                         f.read(),
-                        cursor,
-                        dropbox.files.CommitInfo(dest, mode),
+                        dest,
+                        mode,
                     )
+            else:
+                meta = self.multipart_upload(dest, chunk, mode, args)
             pdbox.debug("Metadata response: %s" % meta, args)
 
         pdbox.info("Uploaded %s to dbx:/%s" % (self.path, dest), args)
+
+    def multipart_upload(self, dest, chunk, mode, args):
+        """
+        Same as upload except it's done in multiple chunks.
+        Raises:
+        - dropbox.exceptions.ApiError(dropbox.files.UploadSessionLookupError)
+        - dropbox.exceptions.ApiError(dropbox.files.UploadSessionFinishError)
+        """
+        nchunks = math.ceil(self.size / chunk)
+        with open(self.path, "rb") as f:
+            # Apparently session_start doesn't raise anything.
+            start = pdbox.dbx.files_upload_session_start(f.read(1))
+            cursor = dropbox.files.UploadSessionCursor(
+                start.session_id,
+                1,
+            )
+            i = 1
+
+            while self.size - f.tell() > chunk:
+                pdbox.debug("Chunk %d/%d" % (i, nchunks), args)
+                i += 1
+                execute(
+                    args,
+                    pdbox.dbx.files_upload_session_append_v2,
+                    f.read(chunk),
+                    cursor,
+                )
+                cursor.offset += chunk
+
+            return execute(
+                args,
+                pdbox.dbx.files_upload_session_finish,
+                f.read(),
+                cursor,
+                dropbox.files.CommitInfo(dest, mode),
+            )
 
 
 class LocalFolder(LocalObject):
     """A folder on disk."""
     def __init__(self, path, args=None):
-        if not os.path.isdir(path):
-            pdbox.debug("Local folder %s does not exist" % path, args)
+        """Raises: ValueError"""
+        if not os.path.exists(path):
             raise ValueError("Local folder %s does not exist" % path)
+        if not os.path.isdir(path):
+            raise ValueError("%s is a file" % path)
         super(LocalFolder, self).__init__(path)
 
     def contents(self, args=None):
@@ -221,22 +232,26 @@ class LocalFolder(LocalObject):
         """
         Synchronize this folders's contents to Dropbox.
         THIS WILL OVERWRITE EXISTING DATA!!!
+        Raises:
+        - dropbox.exceptions.ApiError(dropbox.exceptions.CreateFolderError)
         """
-        existing = from_remote(dest, args)
+        try:
+            existing = from_remote(dest, args)
+        except dropbox.exceptions.ApiError:
+            existing = None
+
         if not isinstance(existing, Folder):
             if not args.dryrun:
-                try:
-                    pdbox.dbx.files_create_folder_v2(dest)
-                except dropbox.exceptions.ApiError as e:
-                    pdbox.debug(e)
-                    pdbox.error("Creating new folder dbx:/%s failed" % dest)
-                    return
+                execute(args, pdbox.dbx.files_create_folder_v2, dest)
             pdbox.info("Created new folder dbx:/%s" % dest)
-
             remote_contents = []
+
         else:
             # Ignore the directory itself.
-            remote_contents = existing.contents(args)[1:]
+            try:
+                remote_contents = existing.contents(args)[1:]
+            except dropbox.exceptions.ApiError:
+                remote_contents = []
 
         # Ignore the folder itself, we've already created it.
         contents = self.contents(args)[1:]
@@ -246,20 +261,31 @@ class LocalFolder(LocalObject):
             names = [e.name for e in contents]
             for entry in remote_contents:
                 if entry.name not in names:
-                    entry.delete(args)
+                    try:
+                        entry.delete(args)
+                    except dropbox.exceptions.ApiError:
+                        pdbox.warn(
+                            "Couldn't delete %s" % entry.dbx_uri(),
+                            args,
+                        )
 
         for entry in contents:
             # Upload the contents.
             func = entry.upload if isinstance(entry, LocalFile) else entry.sync
-            func("%s/%s" % (dest, entry.name), args)
+            try:
+                func("%s/%s" % (dest, entry.name), args)
+            except dropbox.exceptions.ApiError:
+                pdbox.warn("Couldn't upload dbx://%s" % entry.path, args)
 
 
 def from_local(path, args=None):
-    """Get a local file or folder from a path."""
+    """
+    Get a local file or folder from a path.
+    Raises: ValueError
+    """
     if os.path.isfile(path):
         return LocalFile(path, args)
     elif os.path.isdir(path):
         return LocalFolder(path, args)
     else:
-        pdbox.debug("%s does not exist on disk" % path, args)
-        return None
+        raise ValueError("%s does not exist locally" % path)

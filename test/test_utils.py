@@ -4,6 +4,8 @@ import pdbox.util as util
 def test_normpath():
     normpath = util.normpath
     assert normpath("dbx://") == "/"
+    assert normpath("asdf") == "/asdf"
+    assert normpath("asdf////asdf") == "/asdf/asdf"
 
 
 def test_isize():

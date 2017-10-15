@@ -48,17 +48,24 @@ def sync_to(args):
     src = os.path.normpath(args.src)
     dest = normpath(args.dst)
 
-    folder = from_local(src, args)
-    if not folder:
-        fail("<source> does not exist", args)
-    if not isinstance(folder, LocalFolder):
-        fail("<source> is not a folder, use cp to upload files", args)
-    if folder.islink and not args.follow_symlinks:
-        fail("<source> is a symlink and --no-follow-symlinks is set", args)
+    try:
+        folder = from_local(src, args)
+    except ValueError as e:
+        fail(e, args)
 
-    existing = from_remote(dest, args)
-    if existing and isinstance(existing, File):
-        fail("%s already exists as a file" % existing.dbx_uri())
+    if not isinstance(folder, LocalFolder):
+        fail("%s is not a folder, use cp to upload files", src, args)
+    if folder.islink and not args.follow_symlinks:
+        fail("%s is a symlink and --no-follow-symlinks is set", src, args)
+
+    try:
+        remote = from_remote(dest, args)
+    except Exception as e:
+        pdbox.debug(e, args)
+        remote = None
+
+    if remote and isinstance(remote, File):
+        fail("%s already exists as a file" % remote.dbx_uri())
 
     try:
         folder.sync(dest, args)

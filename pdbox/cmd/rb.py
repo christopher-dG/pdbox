@@ -1,3 +1,6 @@
+import dropbox
+import pdbox
+
 from pdbox.models import from_remote, Folder
 from pdbox.util import fail, normpath
 
@@ -10,11 +13,13 @@ def rb(args):
     - path (string)
     - force (bool)
     """
-    path = normpath(args.src)
-    remote = from_remote(path, args)
+    path = normpath(args.path)
+    try:
+        remote = from_remote(path, args)
+    except Exception as e:
+        pdbox.debug(e)
+        fail("dbx:/%s was not found" % path, args)
 
-    if not remote:
-        fail("dbx:/%s does not exist" % path)
     if not isinstance(remote, Folder):
         fail(
             "%s is not a folder: use rm to delete files" % remote.dbx_uri(),
@@ -22,11 +27,26 @@ def rb(args):
         )
 
     if args.force:
-        remote.delete(args)
+        try:
+            remote.delete(args)
+        except dropbox.exceptions.ApiError:
+            fail("%s could not be deleted" % remote.dbx_uri(), args)
     else:
-        if len(remote.contents(args)) > 1:
+        try:
+            contents = remote.contents(args)
+        except dropbox.exceptions.ApiError:
             fail(
-                "%s is not empty and --force is not set" % remote.dbx_uri(),
+                "Not deleting: couldn't get contents of %s "
+                "and --force is not set" % remote.dbx_uri(),
                 args,
             )
-        remote.delete(args)
+        if len(contents) > 1:
+            fail(
+                "%s is not empty and --force is not set"
+                % remote.dbx_uri(),
+                args,
+            )
+            try:
+                remote.delete(args)
+            except dropbox.exception.ApiError:
+                fail("%s could not be deleted" % remote.dbx_uri(), args)

@@ -5,6 +5,8 @@ import pdbox
 
 if "PDBOX_DEBUG" in os.environ:
     pdbox._logger.setLevel(logging.DEBUG)
+else:
+    pdbox._logger.setLevel(logging.ERROR)
 
 
 class FakeArgs:
