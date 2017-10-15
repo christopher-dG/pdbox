@@ -21,11 +21,11 @@ def normpath(path):
 
 def isize(n):
     """Get a readable size from a number of bytes."""
-    if n > 1024**3:
+    if n >= 1024**3:
         return "%.2f GB" % (n / 1024.0**3)
-    elif n > 1024**2:
+    elif n >= 1024**2:
         return "%.2f MB" % (n / 1024.0**2)
-    elif n > 1024:
+    elif n >= 1024:
         return "%.2f KB" % (n / 1024.0)
     else:
         return "%d B" % n

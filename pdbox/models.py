@@ -48,7 +48,7 @@ class Folder(DbxObj):
     def __repr__(self):
         return "Folder{%s}" % self.path
 
-    def contents(self, args):
+    def contents(self, args=None):
         """Get a list of this folder's contents (not recursive)."""
         try:
             if self.path == "/":
@@ -61,7 +61,7 @@ class Folder(DbxObj):
         return [self] + [gen_entry(e, args) for e in result.entries if e]
 
 
-def from_remote(path, args):
+def from_remote(path, args=None):
     """Generate a File or Folder from the given path, or None on failure."""
     path = normpath(path)
     if path == "/":  # get_metadata on the root folder is not supported.
@@ -85,7 +85,7 @@ def from_remote(path, args):
         return None
 
 
-def gen_entry(metadata, args):
+def gen_entry(metadata, args=None):
     """Generate a File or Folder from a metadata object, or None on failure."""
     if isinstance(metadata, dropbox.files.FileMetadata):
         return File(metadata)
@@ -105,18 +105,18 @@ class LocalObject(object):
     Paths are assumed to be real (not symlinks).
     """
     def __init__(self, path):
-        self.path = os.path.normpath(path)
+        self.path = os.path.abspath(path)
 
 
 class LocalFile(LocalObject):
     """A file on disk."""
-    def __init__(self, path, args):
+    def __init__(self, path, args=None):
         if not os.path.isfile(path):
             pdbox.debug(
                 "Local file %s does not exist" % path,
                 args,
             )
-            return None
+            raise ValueError("Local file %s does not exist" % path)
         self.size = os.path.getsize(path)
         super(LocalFile, self).__init__(path)
 
@@ -185,13 +185,13 @@ class LocalFile(LocalObject):
 
 class LocalFolder(LocalObject):
     """A folder on disk."""
-    def __init__(self, path, args):
+    def __init__(self, path, args=None):
         if not os.path.isdir(path):
             pdbox.debug("Local folder %s does not exist" % path, args)
-            return None
+            raise ValueError("Local folder %s does not exist" % path)
         super(LocalFolder, self).__init__(path)
 
-    def contents(self, args):
+    def contents(self, args=None):
         """Get a list of this folder's contents (not recursive)."""
         entries = []
         for entry in os.walk(self.path):
@@ -204,7 +204,7 @@ class LocalFolder(LocalObject):
         return entries
 
 
-def from_local(path, args):
+def from_local(path, args=None):
     """Get a local file or folder from a path."""
     if os.path.isfile(path):
         return LocalFile(path, args)

@@ -1,7 +1,4 @@
 language: python
-os:
-    - linux
-    - osx
 notifications:
   email: false
 python:
