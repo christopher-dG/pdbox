@@ -14,23 +14,23 @@ if __name__ != "__main__":
 # Look for an environment variable first, then check for a dedicated file.
 # If we don't find one, then generate one.
 if "PDBOX_TOKEN" in os.environ:
-    pdbox.logger.debug("Using token from environment variable")
+    pdbox.debug("Using token from environment variable")
     token = os.environ["PDBOX_TOKEN"]
 else:
     try:
         with open(pdbox.TOKEN_PATH) as f:
-            pdbox.logger.debug("Using token from file")
+            pdbox.debug("Using token from file")
             token = f.read()
     except FileNotFoundError:
-        pdbox.logger.debug("Generating new token")
+        pdbox.debug("Generating new token")
         try:
             token = pdbox.auth.auth_flow()
         except Exception as e:
-            pdbox.util.err("%s\nAuthentication failed; exiting" % e)
+            pdbox.util.fail("%s\nAuthentication failed; exiting" % e)
 
 pdbox.auth.login(token)
 parser = pdbox.argparse.get_parser()
 args = parser.parse_args()
 if args.debug:
-    pdbox.logger.setLevel(logging.DEBUG)
+    pdbox._logger.setLevel(logging.DEBUG)
 args.func(args)

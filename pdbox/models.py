@@ -1,6 +1,9 @@
 import dropbox
+import math
+import os.path
 import pdbox
-from pdbox.util import normpath
+
+from pdbox.util import isize, normpath
 
 
 class DbxObj(object):
@@ -9,6 +12,9 @@ class DbxObj(object):
         self.id = metadata.id
         self.name = metadata.name
         self.path = metadata.path_display
+
+    def dbx_uri(self):
+        return "dbx:/%s" % self.path
 
 
 class File(DbxObj):
@@ -42,7 +48,7 @@ class Folder(DbxObj):
     def __repr__(self):
         return "Folder{%s}" % self.path
 
-    def contents(self):
+    def contents(self, args):
         """Get a list of this folder's contents (not recursive)."""
         try:
             if self.path == "/":
@@ -50,12 +56,12 @@ class Folder(DbxObj):
             else:
                 result = pdbox.dbx.files_list_folder(self.path)
         except dropbox.exceptions.ApiError as e:
-            pdbox.logger.warn(e)
+            pdbox.warn(e, args)
             return []
-        return [self] + [gen_entry(e) for e in result.entries if e]
+        return [self] + [gen_entry(e, args) for e in result.entries if e]
 
 
-def from_path(path):
+def from_remote(path, args):
     """Generate a File or Folder from the given path, or None on failure."""
     path = normpath(path)
     if path == "/":  # get_metadata on the root folder is not supported.
@@ -64,27 +70,136 @@ def from_path(path):
     try:
         metadata = pdbox.dbx.files_get_metadata(normpath(path))
     except dropbox.exceptions.ApiError as e:
-        pdbox.logger.debug(e)
+        pdbox.debug(e, args)
         return None
+
     if isinstance(metadata, dropbox.files.FileMetadata):
         return File(metadata)
     elif isinstance(metadata, dropbox.files.FolderMetadata):
         return Folder(metadata)
     else:
-        pdbox.logger.warn(
-            "Expected file or folder metadata, got %s" % type(metadata),
+        pdbox.debug(
+            "Expected file/folder metadata, got %s" % type(metadata),
+            args,
         )
         return None
 
 
-def gen_entry(metadata):
+def gen_entry(metadata, args):
     """Generate a File or Folder from a metadata object, or None on failure."""
     if isinstance(metadata, dropbox.files.FileMetadata):
         return File(metadata)
     elif isinstance(metadata, dropbox.files.FolderMetadata):
         return Folder(metadata)
     else:
-        pdbox.logger.warn(
-            "Expected file or folder metadata, got %s" % type(metadata),
+        pdbox.debug(
+            "Expected file/folder metadata, got %s " % type(metadata),
+            args,
         )
+        return None
+
+
+class LocalObject(object):
+    """
+    A file or folder on disk.
+    Paths are assumed to be real (not symlinks).
+    """
+    def __init__(self, path):
+        self.path = os.path.normpath(path)
+
+
+class LocalFile(LocalObject):
+    """A file on disk."""
+    def __init__(self, path, args):
+        if not os.path.isfile(path):
+            pdbox.debug(
+                "Local file %s does not exist" % path,
+                args,
+            )
+            return None
+        self.size = os.path.getsize(path)
+        super(LocalFile, self).__init__(path)
+
+    def upload(self, dest, args):
+        """
+        Upload a file to Dropbox. This assumes that all appropriate checks
+        have already been made. THIS WILL OVERWRITE EXISTING FILES!!!
+        """
+        pdbox.info(
+            "Uploading %s to %s (%s)"
+            % (self.path, dest, isize(self.size)),
+            args
+        )
+
+        if not args.dryrun:
+            mode = dropbox.files.WriteMode.overwrite  # !!!
+
+            # We can technically upload files up to 150 MB in single shot,
+            # but the connection seems to keep timing out so we'll use
+            # the batch uploader for all but very small files.
+            # This also lets us use some kind of progress bar if desired.
+
+            chunk = 149 * 1024 * 10  # 10 MB, optimal size tbd.
+            if self.size < chunk:
+                with open(self.path, "rb") as f:
+                    meta = pdbox.dbx.files_upload(f.read(), dest, mode)
+            else:
+                nchunks = math.ceil(self.size / chunk)
+                with open(self.path, "rb") as f:
+                    start = pdbox.dbx.files_upload_session_start(f.read(1))
+                    cursor = dropbox.files.UploadSessionCursor(
+                        start.session_id,
+                        1,
+                    )
+                    i = 1
+                    while self.size - f.tell() > chunk:
+                        if not args.quiet and not args.only_show_errors:
+                            pdbox.debug(
+                                "Uploading chunk %d/%d" % (i, nchunks),
+                                args
+                            )
+                        i += 1
+                        pdbox.dbx.files_upload_session_append_v2(
+                            f.read(chunk),
+                            cursor,
+                        )
+                        cursor.offset += chunk
+                    meta = pdbox.dbx.files_upload_session_finish(
+                        f.read(),
+                        cursor,
+                        dropbox.files.CommitInfo(dest, mode),
+                    )
+            pdbox.debug("Metadata response: %s" % meta, args)
+
+        pdbox.info("Uploaded %s to %s" % (self.path, dest), args)
+
+
+class LocalFolder(LocalObject):
+    """A folder on disk."""
+    def __init__(self, path, args):
+        if not os.path.isdir(path):
+            pdbox.debug("Local folder %s does not exist" % path, args)
+            return None
+        super(LocalFolder, self).__init__(path)
+
+    def contents(self, args):
+        entries = []
+        for entry in os.walk(self.path):
+            entries.extend(
+                LocalFolder(os.path.join(entry[0], f), args) for f in entry[1],
+            )
+            entries.extend(
+                LocalFile(os.path.join(entry[0], f), args) for f in entry[2],
+            )
+        return entries
+
+
+def from_local(path, args):
+    """Get a local file or folder from a path."""
+    if os.path.isfile(path):
+        return LocalFile(path, args)
+    elif os.path.isdir(path):
+        return LocalFolder(path, args)
+    else:
+        pdbox.debug("%s does not exist on disk" % path, args)
         return None

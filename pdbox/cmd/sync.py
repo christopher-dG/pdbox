@@ -1,12 +1,13 @@
-from pdbox.util import err
+from pdbox.util import fail
 
 
 def sync(args):
     """Synchronize directories to/from/inside Dropbox."""
     if not args.src.startswith("dbx://") and not args.dst.startswith("dbx://"):
-        err(
+        fail(
             "At least one of <source> or <destination> must be a Dropbox path "
-            "with the prefix 'dbx://'"
+            "with the prefix 'dbx://'",
+            args
         )
 
     if args.src.startswith("dbx://") and args.dst.startswith("dbx://"):

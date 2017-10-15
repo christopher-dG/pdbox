@@ -1,19 +1,20 @@
-from pdbox import logger
-from pdbox.models import from_path, Folder
-from pdbox.util import err, isize
+import pdbox
+from pdbox.models import from_remote, Folder
+from pdbox.util import fail, isize
 from tabulate import tabulate
 
 
 def ls(args):
     """List a directory inside Dropbox."""
     try:
-        folder = from_path(args.path)
+        folder = from_remote(args.path, args)
     except Exception as e:  # The path probably doesn't exist.
-        logger.debug(e)
-        pass
+        pdbox.debug(e, args)
+        folder = None
+
     if not isinstance(folder, Folder):
-        err("%s is not a folder" % args.path)
-    entries = folder.contents()
+        fail("%s is not a folder" % args.path, args)
+    entries = folder.contents(args)
     if not entries:
         print("%s: empty" % folder.path)
     else:
@@ -26,7 +27,7 @@ def display(entries, args, depth=1):
         print("%s: no files or folders\n" % entries[0].path)
         return
 
-    rows = [[entries[0].path, "t", "size", "date"]]
+    rows = [[entries[0].path, "t", "size", "modified"]]
     nfiles = 0
     tsize = 0
     for e in entries[1:]:  # Skip the first entry (the directory itself).
@@ -46,6 +47,6 @@ def display(entries, args, depth=1):
 
     print()
 
-    if args.recursive and depth < args.maxdepth:
+    if args.recursive and (args.maxdepth == -1 or depth < args.maxdepth):
         for e in filter(lambda e: isinstance(e, Folder), entries[1:]):
-            display(e.contents(), args, depth=depth + 1)
+            display(e.contents(args), args, depth=depth + 1)

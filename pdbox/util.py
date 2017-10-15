@@ -1,22 +1,12 @@
-import dropbox
 import os.path
+import pdbox
 import sys
 
-from pdbox import logger
 
-
-def err(s):
+def fail(s, args=None):
     """Log s as an error and exit."""
-    logger.error(s)
+    pdbox.error(s, args)
     sys.exit(1)
-
-
-def execute(func, *args, **kwargs):
-    """Execute some function, and abort if it fails."""
-    try:
-        return func(args, kwargs)
-    except dropbox.exceptions.ApiError as e:
-        err(e)
 
 
 def normpath(path):
@@ -29,11 +19,6 @@ def normpath(path):
     return path
 
 
-def ssize(data):
-    """Get the size of a stream."""
-    return isize(len(data))
-
-
 def isize(n):
     """Get a readable size from a number of bytes."""
     if n > 1024**3:
@@ -44,12 +29,3 @@ def isize(n):
         return "%.2f KB" % (n / 1024.0)
     else:
         return "%d B" % n
-
-
-def rsize(dbx, path):
-    """
-    Get the size of a remote file.
-    This may raise a `dropbox.exceptions.ApiError`.
-    """
-    result = dbx.files_get_metadata(path)
-    return isize(result.size)

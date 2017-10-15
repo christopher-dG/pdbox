@@ -100,7 +100,6 @@ def parse_ls(subparsers):
         help="perform operations on all files under the specified folder",
     )
     ls.add_argument(
-        "-m",
         "--maxdepth",
         type=int,
         nargs="?",
