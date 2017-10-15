@@ -1,6 +1,17 @@
 # pdbox
 
-**A no-frills CLI for Dropbox modelled after AWS's S3 interface.**
+[![Build Status](https://travis-ci.org/christopher-dG/pdbox.svg?branch=master)](https://travis-ci.org/christopher-dG/pdbox)
+[![Project Status](http://www.repostatus.org/badges/latest/wip.svg)](http://www.repostatus.org/#wip)
+
+**A no-frills CLI for Dropbox inspired by
+[AWS's S3 interface](http://docs.aws.amazon.com/cli/latest/reference/s3/index.html).**
+
+## Pre-Release Note
+
+Secure handling of the app secret isn't yet implemented. For now, you'll need
+to [create your own app](https://www.dropbox.com/developers/apps/create) with
+full Dropbox access and store its credentials in `$PDBOX_KEY` and
+`$PDBOX_SECRET` environment variables if you wish to use this.
 
 ## Installation
 
@@ -10,7 +21,7 @@ With `pip`:
 $ pip install git+https://github.com/christopher-dG/pdbox
 ```
 
-Or from source:
+From source:
 
 ```
 $ git clone https://github.com/christopher-dG/pdbox

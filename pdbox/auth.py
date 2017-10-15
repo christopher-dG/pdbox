@@ -2,16 +2,21 @@ import dropbox
 import os
 import pdbox
 
-APP_KEY = "kkdoudk5jlebl37"
+from pdbox.util import fail
 
 
 def auth_flow():
     """Generate an OAuth2 access token."""
-    auth_flow = dropbox.DropboxOAuth2FlowNoRedirect(APP_KEY, get_secret())
+    key, secret = get_app()
+    auth_flow = dropbox.DropboxOAuth2FlowNoRedirect(key, secret)
     print("1. Go to: %s" % auth_flow.start())
     print("2. Click 'Allow' (you might have to log in first)")
     print("3. Copy the authorization code")
-    auth_code = input("Enter the authorization code here: ").strip()
+    try:
+        auth_code = input("Enter the authorization code here: ").strip()
+    except KeyboardInterrupt:
+        print()
+        fail("Cancelled")
     token = auth_flow.finish(auth_code).access_token
     os.makedirs(os.path.dirname(pdbox.TOKEN_PATH), exist_ok=True)
     with open(pdbox.TOKEN_PATH, "w") as f:
@@ -20,10 +25,13 @@ def auth_flow():
     return token
 
 
-def get_secret():
-    """Get the app secret."""
+def get_app():
+    """Get the app key and secret."""
     # TODO: Actually solve this so that other people can use it.
-    return os.environ["APP_SECRET"]
+    try:
+        return os.environ["PDBOX_KEY"], os.environ["PDBOX_SECRET"]
+    except KeyError:
+        fail("$PDBOX_KEY or $PDBOX_SECRET is not set")
 
 
 def get_token():

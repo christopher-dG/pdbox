@@ -4,6 +4,6 @@ import pdbox
 
 
 if __name__ == "__main__":
-    pdbox.auth.login(pdbox.auth.get_token())
     args = pdbox.argparse.parse_args()
+    pdbox.auth.login(pdbox.auth.get_token())
     args.func(args)
