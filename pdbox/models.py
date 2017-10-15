@@ -192,6 +192,7 @@ class LocalFolder(LocalObject):
         super(LocalFolder, self).__init__(path)
 
     def contents(self, args):
+        """Get a list of this folder's contents (not recursive)."""
         entries = []
         for entry in os.walk(self.path):
             entries.extend(

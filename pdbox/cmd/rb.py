@@ -1,5 +1,3 @@
-from pdbox.util import normpath
-
-
 def rb(args):
-    path = normpath(args.dir)
+    """Delete a folder inside Dropbox."""
+    pass

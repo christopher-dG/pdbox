@@ -19,15 +19,15 @@ def sync(args):
 
 
 def sync_inside(args):
-    """Copy a file or directory inside Dropbox."""
+    """Synchronize directories inside Dropbox."""
     pass
 
 
 def sync_from(args):
-    """Copy a file or directory from Dropbox."""
+    """Synchronize a directory from Dropbox."""
     pass
 
 
 def sync_to(args):
-    """Copy a file or directory to Dropbox."""
+    """Synchronize a directory to Dropbox."""
     pass
