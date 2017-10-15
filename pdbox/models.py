@@ -3,7 +3,7 @@ import math
 import os.path
 import pdbox
 
-from pdbox.util import isize, normpath
+from pdbox.util import fail, isize, normpath
 
 
 class DbxObj(object):
@@ -133,16 +133,18 @@ class LocalFile(LocalObject):
 
         if not args.dryrun:
             mode = dropbox.files.WriteMode.overwrite  # !!!
+            chunk = int(args.chunksize * 1024 * 1024)
+            pdbox.debug("Chunk size is %f MB" % args.chunksize, args)
 
-            # We can technically upload files up to 150 MB in single shot,
-            # but the connection seems to keep timing out so we'll use
-            # the batch uploader for all but very small files.
-            # This also lets us use some kind of progress bar if desired.
-
-            chunk = 149 * 1024 * 10  # 10 MB, optimal size tbd.
             if self.size < chunk:
                 with open(self.path, "rb") as f:
-                    meta = pdbox.dbx.files_upload(f.read(), dest, mode)
+
+                    try:
+                        meta = pdbox.dbx.files_upload(f.read(), dest, mode)
+                    except dropbox.exceptions.ApiError as e:
+                        pdbox.debug(e, args)
+                        fail("Upload failed", args)
+
             else:
                 nchunks = math.ceil(self.size / chunk)
                 with open(self.path, "rb") as f:
@@ -156,14 +158,21 @@ class LocalFile(LocalObject):
                         if not args.quiet and not args.only_show_errors:
                             pdbox.debug(
                                 "Uploading chunk %d/%d" % (i, nchunks),
-                                args
+                                args,
                             )
                         i += 1
-                        pdbox.dbx.files_upload_session_append_v2(
-                            f.read(chunk),
-                            cursor,
-                        )
+
+                        try:
+                            pdbox.dbx.files_upload_session_append_v2(
+                                f.read(chunk),
+                                cursor,
+                            )
+                        except dropbox.exceptions.ApiError as e:
+                            pdbox.debug(e, args)
+                            fail("Upload failed", args)
+
                         cursor.offset += chunk
+
                     meta = pdbox.dbx.files_upload_session_finish(
                         f.read(),
                         cursor,

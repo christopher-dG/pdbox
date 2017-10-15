@@ -81,6 +81,14 @@ def parse_cp(subparsers):
         action="store_true",
         help="perform operations on all files under the specified directory",
     )
+    cp.add_argument(
+        "-c",
+        "--chunksize",
+        type=float,
+        nargs="?",
+        default=149,  # Dropbox maximum is 150 MB.
+        help="chunk size in MB for splitting large uploads",
+    )
 
 
 def parse_ls(subparsers):

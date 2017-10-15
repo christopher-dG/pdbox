@@ -45,9 +45,11 @@ def get_token():
             try:
                 token = pdbox.auth.auth_flow()
             except Exception as e:
-                pdbox.util.fail("%s\nAuthentication failed; exiting" % e)
+                pdbox.debug(e)
+                pdbox.util.fail("Authentication failed; exiting")
     return token
 
 
 def login(token):
-    pdbox.dbx = dropbox.Dropbox(token)
+    """Log in to the Dropbox client."""
+    pdbox.dbx = dropbox.Dropbox(token, timeout=None)
