@@ -23,7 +23,30 @@ class DbxObj(object):
         """
         if not args.dryrun:
             execute(args, pdbox.dbx.files_delete_v2, self.path)
-        pdbox.info("Deleted %s" % self.dbx_uri())
+        uri = self.dbx_uri()
+        if isinstance(self, File):
+            uri += "/"
+        pdbox.info("Deleted %s" % uri, args)
+
+    def copy(self, dest, args, force=False):
+        """
+        Copy this file/folder somewhere else inside Dropbox.
+        It is assumed that there is nothing at dest, but if force is set,
+        attempt to delete anyways.
+        Raises: dropbox.exceptions.ApiError(dropbox.files.RelocationError)
+        """
+        if not args.dryrun:
+            if force:
+                try:
+                    execute(args, pdbox.dbx.files_delete_v2, dest)
+                except dropbox.exceptions.ApiError:
+                    pass
+
+            meta = execute(args, pdbox.dbx.files_copy, self.path, dest)
+            pdbox.debug("Metadata response: %s" % meta, args)
+            dest = meta.path_display
+
+        pdbox.info("Copied %s to dbx:/%s" % (self.dbx_uri(), dest), args)
 
 
 class File(DbxObj):
@@ -37,6 +60,7 @@ class File(DbxObj):
             self.folder = "/"
         self.size = metadata.size
         self.date = metadata.server_modified
+        self.rev = metadata.rev
 
     def __repr__(self):
         return "File{%s}" % self.path
@@ -53,6 +77,17 @@ class Folder(DbxObj):
             self.path = "/"
         else:
             super(Folder, self).__init__(metadata)
+
+    def create(path, args=None):
+        """
+        Create a new folder inside Dropbox.
+        Raises: dropbox.exceptions.ApiError(dropbox.files.CreateFolderError)
+        Returns: The new Folder.
+        """
+        meta = execute(args, pdbox.dbx.files_create_folder_v2, path).metadata
+        pdbox.debug("Metadata response: %s" % meta, args)
+        pdbox.info("Created new folder dbx:/%s" % meta.path_display, args)
+        return Folder(meta)
 
     def __repr__(self):
         return "Folder{%s}" % self.path
@@ -75,6 +110,75 @@ class Folder(DbxObj):
             except TypeError as e:
                 pdbox.debug(e, args)
         return entries
+
+    def sync(self, dest, args=None):
+        """
+        Synchronize this folder's contents to another Dropbox folder.
+        dest can be a string or a DbxObj.
+        THIS WILL OVERWRITE EXISTING DATA!!!
+        Note that the caller is responsible for all error handling here.
+        Raises:
+        - dropbox.exceptions.ApiError(dropbox.files.ListFolderError)
+        """
+        if isinstance(dest, str):
+            # Convert to a DbxObject before proceeding.
+            try:
+                dest = from_remote(dest, args)
+            except Exception as e:
+                if not isinstance(e, dropbox.exceptions.ApiError):
+                    pdbox.debug(e, args)
+                # Since it would appear the the destination does not exist,
+                # We can just copy this folder to that path.
+                self.copy(dest, args)
+                return
+
+        if isinstance(dest, File):
+            # All we need to do is clear the way, and then copy the contents.
+            dest.delete(args)
+            self.copy(dest.path, args)
+            return
+
+        # Here's the ugly part.
+
+        src_contents = self.contents(args)[1:]
+        dest_contents = dest.contents(args)[1:]
+
+        if args.delete and dest_contents:
+            # Delete anything in the destination folder not in this one.
+            names = [e.name for e in src_contents]
+            for entry in dest_contents:
+                if entry.name not in names:
+                    try:
+                        entry.delete(args)
+                    except dropbox.exceptions.ApiError:
+                        pdbox.warn(
+                            "Couldn't delete %s" % entry.dbx_uri(),
+                            args,
+                        )
+
+        # Copy all files over into the destination folder.
+        for entry in filter(lambda e: isinstance(e, File), src_contents):
+            joined = "/".join([dest.path, entry.name])
+            try:
+                # We want to force overwriting (without a prompt).
+                entry.copy(joined, args, force=True)
+            except dropbox.exceptions.ApiError:
+                pdbox.warn(
+                    "%s could not be copied to dbx:/%s" %
+                    (entry.dbx_uri(), joined),
+                    args,
+                )
+
+        # Synchronize all the inner folders.
+        for entry in filter(lambda e: isinstance(e, Folder), src_contents):
+            joined = "/".join([dest.path, entry.name])
+            try:
+                entry.sync(joined, args)
+            except dropbox.exceptions.ApiError:
+                pdbox.error(
+                    "Subfolder %s could not be synchronized" % entry.dbx_uri(),
+                    args,
+                )
 
 
 def from_remote(path, args=None):
@@ -164,7 +268,10 @@ class LocalFile(LocalObject):
                 meta = self.multipart_upload(dest, chunk, mode, args)
             pdbox.debug("Metadata response: %s" % meta, args)
 
-        pdbox.info("Uploaded %s to dbx:/%s" % (self.path, dest), args)
+        pdbox.info(
+            "Uploaded %s to dbx:/%s" % (os.path.relpath(self.path), dest),
+            args,
+        )
 
     def multipart_upload(self, dest, chunk, mode, args):
         """
@@ -236,24 +343,22 @@ class LocalFolder(LocalObject):
         - dropbox.exceptions.ApiError(dropbox.exceptions.CreateFolderError)
         """
         try:
-            existing = from_remote(dest, args)
+            remote = from_remote(dest, args)
         except dropbox.exceptions.ApiError:
-            existing = None
-
-        if not isinstance(existing, Folder):
-            if not args.dryrun:
-                execute(args, pdbox.dbx.files_create_folder_v2, dest)
-            pdbox.info("Created new folder dbx:/%s" % dest)
             remote_contents = []
-
         else:
-            # Ignore the directory itself.
-            try:
-                remote_contents = existing.contents(args)[1:]
-            except dropbox.exceptions.ApiError:
+            if not isinstance(remote, Folder):
+                if not args.dryrun:
+                    Folder.create(dest, args)
                 remote_contents = []
+            else:
+                try:
+                    # Ignore the directory itself.
+                    remote_contents = remote.contents(args)[1:]
+                except dropbox.exceptions.ApiError:
+                    remote_contents = []
 
-        # Ignore the folder itself, we've already created it.
+        # Ignore the folder itself, it already exists.
         contents = self.contents(args)[1:]
 
         if args.delete and remote_contents:
@@ -273,7 +378,7 @@ class LocalFolder(LocalObject):
             # Upload the contents.
             func = entry.upload if isinstance(entry, LocalFile) else entry.sync
             try:
-                func("%s/%s" % (dest, entry.name), args)
+                func("/".join([dest, entry.name]), args)
             except dropbox.exceptions.ApiError:
                 pdbox.warn("Couldn't upload dbx://%s" % entry.path, args)
 

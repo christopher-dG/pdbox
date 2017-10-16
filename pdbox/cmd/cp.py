@@ -1,8 +1,9 @@
 import dropbox
 import os.path
+import pdbox
 
 from pdbox.models import from_local, from_remote, File, LocalFolder
-from pdbox.util import fail, normpath
+from pdbox.util import fail, normpath, overwrite
 
 
 def cp(args):
@@ -35,7 +36,49 @@ def cp(args):
 
 def cp_inside(args):
     """Copy a file inside Dropbox."""
-    pass
+    src = normpath(args.src)
+    dest = normpath(args.dst)
+
+    try:
+        remote_src = from_remote(src, args)
+    except Exception as e:
+        if not isinstance(e, dropbox.exceptions.ApiError):
+            pdbox.debug(e, args)
+        fail("dbx:/%s was not found" % src, args)
+
+    if not isinstance(remote_src, File):
+        fail(
+            "%s is a folder, use sync to copy folders" % remote_src.dbx_uri(),
+            args,
+        )
+
+    try:
+        remote_dest = from_remote(dest, args)
+    except Exception as e:  # It probably doesn't exist, this is what we want.
+        if not isinstance(e, dropbox.exceptions.ApiError):
+            pdbox.debug(e, args)
+    else:  # Something exists here.
+        if not overwrite(remote_dest.dbx_uri(), args):
+            fail("Cancelled", args)
+
+        # There doesn't seem to be a way to copy and overwrite at the same
+        # time, so we'll delete and then copy.
+        try:
+            remote_dest.delete(args)
+        except dropbox.exceptions.ApiError:
+            fail(
+                "%s could not be copied to %s" %
+                (remote_src.dbx_uri(), remote_dest.dbx_uri()),
+                args,
+            )
+
+    try:
+        remote_src.copy(dest, args)
+    except dropbox.exceptions.ApiError:
+        fail(
+            "%s could not be copied to dbx:/%s" % (remote_src.dbx_uri(), dest),
+            args,
+        )
 
 
 def cp_from(args):
@@ -61,20 +104,11 @@ def cp_to(args):
     try:
         remote = from_remote(dest, args)
     except Exception:  # Remote file probably does not exist.
-        remote = None
-
-    if remote and not isinstance(remote, File):  # Is a folder.
-        fail("%s is a folder" % remote.dbx_uri(), args)
-
-    if remote and not args.quiet and not args.only_show_errors:
-        # File exists, prompt for overwrite confirmation.
-        try:
-            confirm = input(
-                "File %s exists: overwrite? [y/N] " % remote.dbx_uri(),
-            )
-        except KeyboardInterrupt:
-            confirm = "n"
-        if confirm.lower() not in ["y", "yes"]:
+        pass
+    else:
+        if not isinstance(remote, File):  # Is a folder.
+            fail("%s is a folder" % remote.dbx_uri(), args)
+        if not overwrite(remote.dbx_uri(), args):
             fail("Cancelled", args)
 
     try:

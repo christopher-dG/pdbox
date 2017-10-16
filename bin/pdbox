@@ -9,6 +9,6 @@ if __name__ == "__main__":
     args.func(args)
     try:
         if args.dryrun:
-            pdbox.info("--dryrun is set: No operations were performed")
+            pdbox.info("--dryrun is set: no operations were performed")
     except AttributeError:
         pass

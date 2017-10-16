@@ -136,6 +136,11 @@ def parse_mb(subparsers):
         metavar="<path>",
         help="path to the new folder",
     )
+    mb.add_argument(
+        "--dryrun",
+        action="store_true",
+        help="display operations without performing them",
+    )
 
 
 def parse_mv(subparsers):
@@ -210,10 +215,16 @@ def parse_rb(subparsers):
     )
     rb.set_defaults(func=pdbox.cmd.rb)
     rb.add_argument(
-        "dir",
+        "path",
         metavar="<folder>",
         help="folder to remove",
     )
+    rb.add_argument(
+        "--dryrun",
+        action="store_true",
+        help="display operations without performing them",
+    )
+
     rb.add_argument(
         "-f",
         "--force",

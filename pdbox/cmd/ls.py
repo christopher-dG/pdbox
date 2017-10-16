@@ -32,7 +32,7 @@ def ls(args):
 def display(entries, args, depth=1):
     """Given a list of folders and files, print them as a table."""
     if len(entries) == 1:  # The only entry is the folder itself.
-        print("%s: no files or folders\n" % entries[0].path)
+        print("%s: no files or folders\n" % entries[0].dbx_uri())
         return
 
     rows = [[entries[0].dbx_uri(), "size", "modified (UTC)"]]

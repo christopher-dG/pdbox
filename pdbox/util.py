@@ -10,11 +10,14 @@ def execute(ns, func, *args, **kwargs):
     First argument is an argparse.Namespace, second is the method to call.
     Raises: dropbox.exceptionos.ApiError
     """
-
     try:
         return func(*args, **kwargs)
     except dropbox.exceptions.ApiError as e:
-        pdbox.debug("dbx.%s: %s" % (func.__name__, e.error), ns)
+        pdbox.debug(
+            "API error:\n  Function: dbx.%s\n  Arguments: %s\n  Error: %s" %
+            (func.__name__, args, e.error),
+            ns,
+        )
         raise e
 
 
@@ -22,6 +25,21 @@ def fail(s, args=None):
     """Log s as an error and exit."""
     pdbox.error(s, args)
     sys.exit(1)
+
+
+def overwrite(path, args=None):
+    """Get user confirmation for a file/folder overwrite."""
+    try:
+        if args.quiet or args.only_show_errors:
+            return True
+    except AttributeError:
+        pass
+
+    try:
+        confirm = input("File %s exists: overwrite? [y/N] " % path)
+    except KeyboardInterrupt:
+        return False
+    return confirm.lower() in ["y", "yes"]
 
 
 def normpath(path):

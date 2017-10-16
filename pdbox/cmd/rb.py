@@ -11,6 +11,7 @@ def rb(args):
 
     args fields:
     - path (string)
+    - dryrun (bool)
     - force (bool)
     """
     path = normpath(args.path)
@@ -46,7 +47,7 @@ def rb(args):
                 % remote.dbx_uri(),
                 args,
             )
-            try:
-                remote.delete(args)
-            except dropbox.exception.ApiError:
-                fail("%s could not be deleted" % remote.dbx_uri(), args)
+        try:
+            remote.delete(args)
+        except dropbox.exceptions.ApiError:
+            fail("%s could not be deleted" % remote.dbx_uri(), args)

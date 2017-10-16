@@ -1,3 +1,4 @@
+import dropbox
 import os.path
 import pdbox
 
@@ -35,7 +36,51 @@ def sync(args):
 
 def sync_inside(args):
     """Synchronize directories inside Dropbox."""
-    pass
+    src = normpath(args.src)
+    dest = normpath(args.dst)
+
+    try:
+        remote_src = from_remote(src, args)
+    except Exception as e:
+        if not isinstance(e, dropbox.exceptions.ApiError):
+            pdbox.debug(e, args)
+        fail("dbx:/%s was not found" % src, args)
+
+    if isinstance(remote_src, File):
+        fail("%s is a file, use cp to copy files" % remote_src.dbx_uri(), args)
+
+    try:
+        remote_dest = from_remote(dest, args)
+    except Exception as e:  # It probably doesn't exist, this is what we want.
+        if not isinstance(e, dropbox.exceptions.ApiError):
+            pdbox.debug(e, args)
+        try:  # Since the destination doesn't exist, we can just copy it.
+            remote_src.copy(dest, args)
+        except dropbox.exceptions.ApiError:
+            fail(
+                "%s could not be synchronized to dbx:/%s" %
+                (remote_src.dbx_uri(), dest),
+                args,
+            )
+        return
+
+    try:
+        remote_src.sync(remote_dest, args)
+    except dropbox.exceptions.ApiError:
+        fail(
+            "%s could not be synchronized to %s" %
+            (remote_src.dbx_uri(), remote_dest.dbx_uri()),
+            args,
+        )
+
+    try:
+        remote_src.sync(remote_dest, args)
+    except dropbox.exceptions.ApiError:
+        fail(
+            "%s could not be synchronized to %s" %
+            (remote_src.dbx_uri(), remote_dest.dbx_uri()),
+            args,
+        )
 
 
 def sync_from(args):
