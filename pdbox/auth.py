@@ -18,7 +18,8 @@ def auth_flow():
         print()
         fail("Cancelled")
     token = auth_flow.finish(auth_code).access_token
-    os.makedirs(os.path.dirname(pdbox.TOKEN_PATH), exist_ok=True)
+    if not os.path.exists(os.path.dirname(pdbox.TOKEN_PATH)):
+        os.makedirs(os.path.dirname(pdbox.TOKEN_PATH))
     with open(pdbox.TOKEN_PATH, "w") as f:
         f.write(token)
         pdbox.debug("Created new token at %s" % pdbox.TOKEN_PATH)

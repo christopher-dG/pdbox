@@ -92,8 +92,8 @@ class File(DbxObj):
                 shutil.rmtree(dest)
             else:
                 dirname = os.path.dirname(dest)
-                if dirname:
-                    os.makedirs(dirname, exist_ok=True)
+                if dirname and not os.path.exists(dirname):
+                    os.makedirs(dirname)
 
             if os.path.isfile(tmp_dest):
                 os.rename(tmp_dest, dest)
