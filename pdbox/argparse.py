@@ -27,6 +27,10 @@ def parse_args():
     return args
 
 
+# TODO: Maybe rename some commands away from S3 conventions,
+# especially the ones that refer to buckets.
+
+
 def parse_cp(subparsers):
     """Add arguments for the cp command."""
     cp = subparsers.add_parser(

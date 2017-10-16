@@ -119,6 +119,8 @@ class Folder(DbxObj):
         Note that the caller is responsible for all error handling here.
         Raises:
         - dropbox.exceptions.ApiError(dropbox.files.ListFolderError)
+        TODO: Make this way faster with some kind of registry. Right now
+        it's basically just a bulk upload.
         """
         if isinstance(dest, str):
             # Convert to a DbxObject before proceeding.
@@ -341,6 +343,7 @@ class LocalFolder(LocalObject):
         THIS WILL OVERWRITE EXISTING DATA!!!
         Raises:
         - dropbox.exceptions.ApiError(dropbox.exceptions.CreateFolderError)
+        TODO: Similar to the remote sync, this can be optimized a ton.
         """
         try:
             remote = from_remote(dest, args)
