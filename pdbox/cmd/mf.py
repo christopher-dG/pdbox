@@ -5,7 +5,7 @@ from pdbox.models import from_remote, Folder
 from pdbox.util import fail, normpath
 
 
-def mb(args):
+def mf(args):
     """
     Create a new folder inside Dropbox.
 

@@ -5,7 +5,7 @@ from pdbox.models import from_remote, Folder
 from pdbox.util import fail, normpath
 
 
-def rb(args):
+def rf(args):
     """
     Delete a folder inside Dropbox.
 

@@ -33,7 +33,7 @@ def info(s, args=None):
 def warn(s, args=None):
     """Log a warning message."""
     try:
-        if not args.quiet and not args.only_show_errors:
+        if not args.quiet:
             _logger.warn(s)
     except AttributeError:
         _logger.warn(s)

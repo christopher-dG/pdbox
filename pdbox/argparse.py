@@ -16,19 +16,15 @@ def parse_args():
     subparsers.required = True
     parse_cp(subparsers)
     parse_ls(subparsers)
-    parse_mb(subparsers)
+    parse_mf(subparsers)
     parse_mv(subparsers)
-    parse_rb(subparsers)
+    parse_rf(subparsers)
     parse_rm(subparsers)
     parse_sync(subparsers)
     args = parser.parse_args()
     if args.debug:
         pdbox._logger.setLevel(logging.DEBUG)
     return args
-
-
-# TODO: Maybe rename some commands away from S3 conventions,
-# especially the ones that refer to buckets.
 
 
 def parse_cp(subparsers):
@@ -128,19 +124,19 @@ def parse_ls(subparsers):
     )
 
 
-def parse_mb(subparsers):
-    """Add arguments for the mb command."""
-    mb = subparsers.add_parser(
-        "mb",
+def parse_mf(subparsers):
+    """Add arguments for the mf command."""
+    mf = subparsers.add_parser(
+        "mf",
         help="create a new folder inside Dropbox",
     )
-    mb.set_defaults(func=pdbox.cmd.mb)
-    mb.add_argument(
+    mf.set_defaults(func=pdbox.cmd.mf)
+    mf.add_argument(
         "path",
         metavar="<path>",
         help="path to the new folder",
     )
-    mb.add_argument(
+    mf.add_argument(
         "--dryrun",
         action="store_true",
         help="display operations without performing them",
@@ -211,25 +207,25 @@ def parse_mv(subparsers):
     )
 
 
-def parse_rb(subparsers):
-    """Add arguments for the rb command."""
-    rb = subparsers.add_parser(
-        "rb",
+def parse_rf(subparsers):
+    """Add arguments for the rf command."""
+    rf = subparsers.add_parser(
+        "rf",
         help="delete a folder inside Dropbox",
     )
-    rb.set_defaults(func=pdbox.cmd.rb)
-    rb.add_argument(
+    rf.set_defaults(func=pdbox.cmd.rf)
+    rf.add_argument(
         "path",
         metavar="<folder>",
         help="folder to remove",
     )
-    rb.add_argument(
+    rf.add_argument(
         "--dryrun",
         action="store_true",
         help="display operations without performing them",
     )
 
-    rb.add_argument(
+    rf.add_argument(
         "-f",
         "--force",
         action="store_true",

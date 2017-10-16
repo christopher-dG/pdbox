@@ -36,16 +36,16 @@ $ python setup.py install
 ## Usage
 
 ```
-usage: pdbox [-h] [-d] {cp,ls,mb,mv,rb,rm,sync} ...
+usage: pdbox [-h] [-d] {cp,ls,mf,mv,rf,rm,sync} ...
 
 positional arguments:
-  {cp,ls,mb,mv,rb,rm,sync}
+  {cp,ls,mf,mv,rf,rm,sync}
     cp                  copy a file to/from/inside Dropbox
     ls                  list a folder inside Dropbox
-    mb                  create a new folder inside Dropbox
+    mf                  create a new folder inside Dropbox
     mv                  move a file or object inside Dropbox
-    rb                  delete a folder inside Dropbox
-    rm                  delete a file or directory inside Dropbox
+    rf                  delete a folder inside Dropbox
+    rm                  delete a file or folder inside Dropbox
     sync                synchronize a folder to/from/inside Dropbox
 
 optional arguments:
@@ -63,7 +63,7 @@ set the `PDBOX_TOKEN` environment variable.
 
 > Dropbox already has a CLI, what's the point?
 
-Installing `dropbox-cli` on Arch Linux uses 147 MB, that's a lot!
+Installing `dropbox-cli` on Arch Linux uses 147 MB, that's a lot!  
 This is not intended for "power users" looking for advanced sync
 functionality and more, but rather for those looking for a quick, easy way to
 access their files when the full Dropbox client isn't practical, such as
