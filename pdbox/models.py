@@ -287,6 +287,11 @@ class LocalFile(LocalObject):
         self.size = os.path.getsize(path)
         super(LocalFile, self).__init__(path)
 
+    def delete(self, args):
+        if not args.dryrun:
+            os.remove(self.path)
+        pdbox.debug("Deleted %s" % self.path)
+
     def upload(self, dest, args):
         """
         Upload a file to Dropbox. This assumes that all appropriate checks
@@ -366,6 +371,11 @@ class LocalFolder(LocalObject):
             raise ValueError("%s is a file" % path)
         super(LocalFolder, self).__init__(path)
 
+    def delete(self, args):
+        if not args.dryrun:
+            shutil.rmtree(self.path)
+        pdbox.debug("Deleted %s" % self.path)
+
     def contents(self, args=None):
         """
         Get a list of this folder's contents (not recursive).
@@ -381,7 +391,29 @@ class LocalFolder(LocalObject):
             )
         return entries
 
-    def sync(self, dest, args=None):
+    def upload(self, dest, args):
+        """
+        Upload this folder to Dropbox,
+        without making any attempt to synchronize anything.
+        THIS WILL OVERWRITE EXISTING DATA!!!
+        Raises:
+        - dropbox.exceptions.ApiError(dropbox.files.UploadError)
+        - dropbox.exceptions.ApiError(dropbox.files.UploadSessionLookupError)
+        - dropbox.exceptions.ApiError(dropbox.files.UploadSessionFinishError)
+        """
+        try:
+            remote = from_remote(dest, args)
+        except Exception as e:
+            if not isinstance(e, dropbox.exceptions.ApiError):
+                pdbox.debug(e, args)
+        else:
+            remote.delete(args)
+
+        Folder.create(dest)
+        for entry in self.contents(args)[1:]:
+            entry.upload("/".join([dest, entry.name]), args)
+
+    def sync(self, dest, args):
         """
         Synchronize this folders's contents to Dropbox.
         THIS WILL OVERWRITE EXISTING DATA!!!

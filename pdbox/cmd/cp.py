@@ -131,8 +131,9 @@ def cp_to(args):
 
     try:
         remote = from_remote(dest, args)
-    except Exception:  # Remote file probably does not exist.
-        pass
+    except Exception as e:  # Remote file probably does not exist.
+        if not isinstance(e, dropbox.exceptions.ApiError):
+            pdbox.debug(e, args)
     else:
         if not isinstance(remote, File):  # Is a folder.
             fail("%s is a folder" % remote.dbx_uri(), args)
