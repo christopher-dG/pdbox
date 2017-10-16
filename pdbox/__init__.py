@@ -49,6 +49,8 @@ def error(s, args=None):
 
 
 TOKEN_PATH = os.path.join(appdirs.user_data_dir("pdbox"), "pdbox_token")
+TMP_DOWNLOAD_DIR = os.path.join(appdirs.user_data_dir("pdbox"), "tmp")
+os.makedirs(TMP_DOWNLOAD_DIR, exist_ok=True)
 dbx = None  # To be populated on login.
 
 

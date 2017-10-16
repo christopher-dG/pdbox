@@ -83,7 +83,35 @@ def cp_inside(args):
 
 def cp_from(args):
     """Copy a file from Dropbox."""
-    pass
+    src = normpath(args.src)
+    dest = os.path.normpath(args.dst)
+
+    try:
+        local = from_local(dest, args)
+    except ValueError as e:
+        pdbox.debug(e, args)
+    else:  # Something exists here.
+        if not overwrite(local.path, args):
+            fail("Cancelled", args)
+
+    try:
+        remote = from_remote(src, args)
+    except Exception as e:
+        if not isinstance(e, dropbox.exceptions.ApiError):
+            pdbox.debug(e)
+        fail("Couldn't find dbx:/%s" % src, args)
+
+    if not isinstance(remote, File):
+        fail(
+            "%s is not a file, use sync to download folders" %
+            remote.dbx_uri(),
+            args,
+        )
+
+    try:
+        remote.download(dest, args)
+    except dropbox.exceptions.ApiError:
+        fail("Couldn't download %s" % remote.dbx_uri(), args)
 
 
 def cp_to(args):

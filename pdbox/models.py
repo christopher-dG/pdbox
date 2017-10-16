@@ -2,8 +2,9 @@ import dropbox
 import math
 import os.path
 import pdbox
+import shutil
 
-from pdbox.util import execute, normpath
+from pdbox.util import execute, isize, normpath
 
 
 class DbxObj(object):
@@ -64,6 +65,49 @@ class File(DbxObj):
 
     def __repr__(self):
         return "File{%s}" % self.path
+
+    def download(self, dest, args):
+        """
+        Download this file to dest.
+        THIS WILL OVERWRITE EXISTING DATA!!!
+        Raises:
+        - dropbox.exceptions.ApiError(dropbox.files.DownloadError)
+        - FileNotFoundError
+        """
+        tmp_dest = os.path.join(pdbox.TMP_DOWNLOAD_DIR, os.path.basename(dest))
+        while os.path.exists(tmp_dest):
+            tmp_dest += "_"
+        meta = execute(
+            args,
+            pdbox.dbx.files_download_to_file,
+            tmp_dest,
+            self.path,
+        )
+        pdbox.debug("Metadata response: %s" % meta, args)
+
+        if not args.dryrun:
+            if os.path.isfile(dest):
+                os.remove(dest)
+            elif os.path.isdir(dest):
+                shutil.rmtree(dest)
+            else:
+                dirname = os.path.dirname(dest)
+                if dirname:
+                    os.makedirs(dirname, exist_ok=True)
+
+            if os.path.isfile(tmp_dest):
+                os.rename(tmp_dest, dest)
+            else:  # File disappeared somehow.
+                raise FileNotFoundError(
+                    "%s was downloaded to %s, but it can't be found there" %
+                    (self.dbx_uri(), tmp_dest),
+                )
+
+        pdbox.info(
+            "Downloaded %s to %s (%s)" %
+            (self.dbx_uri(), dest, isize(self.size)),
+            args,
+        )
 
 
 class Folder(DbxObj):
