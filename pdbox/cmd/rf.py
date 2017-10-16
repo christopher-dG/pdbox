@@ -41,7 +41,7 @@ def rf(args):
                 "and --force is not set" % remote.dbx_uri(),
                 args,
             )
-        if len(contents) > 1:
+        if contents:
             fail(
                 "%s is not empty and --force is not set"
                 % remote.dbx_uri(),

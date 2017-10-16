@@ -139,7 +139,7 @@ class Folder(DbxObj):
     def contents(self, args=None):
         """
         Get a list of this folder's contents (not recursive).
-        The first entry is itself.
+        Does not contain itself.
         Raises: dropbox.exceptions.ApiError(dropbox.files.ListFolderError)
         """
         if self.path == "/":
@@ -147,7 +147,7 @@ class Folder(DbxObj):
         else:
             result = execute(args, pdbox.dbx.files_list_folder, self.path)
 
-        entries = [self]
+        entries = []
         for entry in result.entries:
             try:
                 entries.append(gen_entry(entry, args))
@@ -186,8 +186,8 @@ class Folder(DbxObj):
 
         # Here's the ugly part.
 
-        src_contents = self.contents(args)[1:]
-        dest_contents = dest.contents(args)[1:]
+        src_contents = self.contents(args)
+        dest_contents = dest.contents(args)
 
         if args.delete and dest_contents:
             # Delete anything in the destination folder not in this one.
@@ -379,9 +379,9 @@ class LocalFolder(LocalObject):
     def contents(self, args=None):
         """
         Get a list of this folder's contents (not recursive).
-        The first entry is the folder itself.
+        Does not contain itself.
         """
-        entries = [self]
+        entries = []
         for entry in os.walk(self.path):
             entries.extend(
                 LocalFolder(os.path.join(entry[0], f), args) for f in entry[1],
@@ -410,7 +410,7 @@ class LocalFolder(LocalObject):
             remote.delete(args)
 
         Folder.create(dest)
-        for entry in self.contents(args)[1:]:
+        for entry in self.contents(args):
             entry.upload("/".join([dest, entry.name]), args)
 
     def sync(self, dest, args):
@@ -432,13 +432,11 @@ class LocalFolder(LocalObject):
                 remote_contents = []
             else:
                 try:
-                    # Ignore the directory itself.
-                    remote_contents = remote.contents(args)[1:]
+                    remote_contents = remote.contents(args)
                 except dropbox.exceptions.ApiError:
                     remote_contents = []
 
-        # Ignore the folder itself, it already exists.
-        contents = self.contents(args)[1:]
+        contents = self.contents(args)
 
         if args.delete and remote_contents:
             # Delete anything in the remote folder not in the local one.

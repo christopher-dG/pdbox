@@ -26,20 +26,20 @@ def ls(args):
     if not entries:
         print("%s: no files or folders" % folder.dbx_uri())
     else:
-        display(entries, args)
+        display(folder, entries, args)
 
 
-def display(entries, args, depth=1):
+def display(folder, entries, args, depth=1):
     """Given a list of folders and files, print them as a table."""
-    if len(entries) == 1:  # The only entry is the folder itself.
-        print("%s: no files or folders\n" % entries[0].dbx_uri())
+    if not entries:
+        print("%s: no files or folders\n" % folder.dbx_uri())
         return
 
-    rows = [[entries[0].dbx_uri(), "size", "modified (UTC)"]]
+    rows = [[folder.dbx_uri(), "size", "modified (UTC)"]]
     nfiles = 0
     tsize = 0
 
-    for e in entries[1:]:  # Skip the first entry (the directory itself).
+    for e in entries:  # Skip the first entry (the directory itself).
         if isinstance(e, Folder):
             rows.append([e.name + "/", 0, ""])
         else:
@@ -51,17 +51,22 @@ def display(entries, args, depth=1):
     print(tabulate(rows, headers="firstrow"))
 
     if args.summarize:
+        def plur(s):
+            return "" if s == 1 else "s"
         nfolders = len(entries) - nfiles
         sz = isize(tsize) if args.human_readable else str(tsize)
-        print("%d files, %d folders, %s" % (nfiles, nfolders, sz))
+        print(
+            "%d file%s, %d folder%s, %s" %
+            (nfiles, plur(nfiles), nfolders, plur(nfolders), sz),
+        )
 
     print()
 
     if args.recursive and (args.maxdepth == -1 or depth < args.maxdepth):
-        for e in filter(lambda e: isinstance(e, Folder), entries[1:]):
+        for e in filter(lambda e: isinstance(e, Folder), entries):
             try:
                 contents = e.contents(args)
             except dropbox.exceptions.ApiError:
                 pdbox.warn("%s could not be displayed" % e.dbx_uri(), args)
             else:
-                display(contents, args, depth=depth + 1)
+                display(e, contents, args, depth=depth + 1)
