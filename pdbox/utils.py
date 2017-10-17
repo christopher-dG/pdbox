@@ -8,7 +8,7 @@ def execute(ns, func, *args, **kwargs):
     """
     Execute a method and return its output, logging its error if it raises.
     First argument is an argparse.Namespace, second is the method to call.
-    Raises: dropbox.exceptionos.ApiError
+    Raises: dropbox.exceptions.ApiError
     """
     try:
         return func(*args, **kwargs)

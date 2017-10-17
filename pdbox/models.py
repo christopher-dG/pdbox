@@ -4,7 +4,7 @@ import os.path
 import pdbox
 import shutil
 
-from pdbox.util import execute, isize, normpath
+from pdbox.utils import execute, isize, normpath
 
 
 class DbxObj(object):

@@ -2,7 +2,7 @@ import dropbox
 import os
 import pdbox
 
-from pdbox.util import fail
+from pdbox.utils import fail
 
 
 def auth_flow():

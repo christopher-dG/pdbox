@@ -2,7 +2,7 @@ import dropbox
 import pdbox
 
 from pdbox.models import from_remote, Folder
-from pdbox.util import fail, isize, normpath
+from pdbox.utils import fail, isize, normpath
 from tabulate import tabulate
 
 

@@ -2,7 +2,7 @@ import dropbox
 import pdbox
 
 from pdbox.models import from_remote, File
-from pdbox.util import fail, normpath
+from pdbox.utils import fail, normpath
 
 
 def rm(args):

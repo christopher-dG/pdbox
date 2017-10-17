@@ -3,7 +3,7 @@ import os.path
 import pdbox
 
 from pdbox.models import from_local, from_remote, File, LocalFolder
-from pdbox.util import fail, normpath
+from pdbox.utils import fail, normpath
 
 
 def sync(args):

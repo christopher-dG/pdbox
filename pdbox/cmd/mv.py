@@ -3,7 +3,7 @@ import os
 import pdbox
 
 from pdbox.models import from_local, from_remote, File, LocalFolder
-from pdbox.util import fail, normpath, overwrite
+from pdbox.utils import fail, normpath, overwrite
 
 
 def mv(args):
