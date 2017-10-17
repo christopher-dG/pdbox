@@ -49,8 +49,12 @@ def auth_flow(args):
     print("2. Click 'Allow' (you might have to log in first)")
     print("3. Copy the authorization code")
 
+    prompt = "Enter the authorization code here: "
     try:
-        code = input("Enter the authorization code here: ").strip()
+        try:
+            code = raw_input(prompt).strip()
+        except NameError:
+            code = input(prompt).strip()
     except KeyboardInterrupt:
         print("")
         fail("Cancelled", args)
@@ -63,9 +67,13 @@ def auth_flow(args):
     )
 
     try:
+        payload = bytes("{\"code\": \"%s\"}" % code, "utf-8")
+    except TypeError:
+        payload = "{\"code\": \"%s\"}" % code
+    try:
         response = client.invoke(
             FunctionName="pdboxGetAuthToken",
-            Payload=bytes("{\"code\": \"%s\"}" % code, "utf-8"),
+            Payload=payload,
         )
     except Exception as e:
         pdbox.debug(e, args)
