@@ -6,7 +6,7 @@ import pdbox
 if __name__ == "__main__":
     args = pdbox.argparse.parse_args()
     pdbox.debug("Args: %s" % args, args)
-    pdbox.auth.login(pdbox.auth.get_token())
+    pdbox.auth.login(pdbox.auth.get_token(args))
     args.func(args)
     try:
         if args.dryrun:

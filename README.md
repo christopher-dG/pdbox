@@ -8,14 +8,9 @@
 
 ## Pre-Release Note
 
-Secure handling of the app secret isn't yet implemented. For now, you'll need
-to [create your own app](https://www.dropbox.com/developers/apps/create) with
-full Dropbox access and store its credentials in `$PDBOX_KEY` and
-`$PDBOX_SECRET` environment variables if you wish to use this.
-
-Additionally, I make no guarantees about the correctness of this software, and
-I will take no responsibility for any data loss that may occur (although I
-will apologize profusely).
+This software is a work in progress. I make no guarantees about its
+correctness, and will take no responsibility for any data loss that may occur
+(although I will apologize profusely).
 
 ## Installation
 

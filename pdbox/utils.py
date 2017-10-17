@@ -19,6 +19,13 @@ def execute(ns, func, *args, **kwargs):
             ns,
         )
         raise e
+    except dropbox.exceptions.BadInputError as e:
+        pdbox.debug(e, ns)
+        fail(
+            "Your authentication token is invalid, "
+            "delete %s and try again" % pdbox.TOKEN_PATH,
+            args,
+        )
 
 
 def fail(s, args=None):
