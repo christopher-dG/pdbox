@@ -49,6 +49,30 @@ class DbxObj(object):
 
         pdbox.info("Copied %s to dbx:/%s" % (self.dbx_uri(), dest), args)
 
+    def move(self, dest, args, force=False):
+        """
+        Move this file/folder somewhere else inside Dropbox.
+        It is assumed that there is nothing at dest, but if force is set,
+        attempt to delete anyways.
+        Raises: dropbox.exceptions.ApiError(dropbox.files.RelocationError)
+        """
+        if not args.dryrun:
+            if force:
+                try:
+                    execute(args, pdbox.dbx.files_delete_v2, dest)
+                except dropbox.exceptions.ApiError:
+                    pass
+
+            meta = execute(
+                args,
+                pdbox.dbx.files_move_v2,
+                self.path,
+                dest,
+            ).metadata
+            pdbox.debug("Metadata response: %s" % meta, args)
+
+        pdbox.info("Moved %s to dbx:/%s" % (self.dbx_uri(), dest), args)
+
 
 class File(DbxObj):
     """A Dropbox file."""
@@ -122,6 +146,9 @@ class Folder(DbxObj):
         else:
             super(Folder, self).__init__(metadata)
 
+    def __repr__(self):
+        return "Folder{%s}" % self.path
+
     def create(path, args=None):
         """
         Create a new folder inside Dropbox.
@@ -133,8 +160,49 @@ class Folder(DbxObj):
         pdbox.info("Created new folder dbx:/%s" % meta.path_display, args)
         return Folder(meta)
 
-    def __repr__(self):
-        return "Folder{%s}" % self.path
+    def download(self, dest, args, tmp_dest=None):
+        """
+        Download this folder to dest.
+        THIS WILL OVERWRITE EXISTING DATA!!!
+        Raises:
+        - dropbox.exceptions.ApiError(dropbox.files.DownloadError)
+        - FileNotFoundErro
+        """
+        if not tmp_dest:
+            tmp_dest = os.path.join(
+                pdbox.TMP_DOWNLOAD_DIR,
+                os.path.basename(dest),
+            )
+        else:
+            tmp_dest = os.path.join(tmp_dest, os.path.basename(dest))
+        while os.path.exists(tmp_dest):
+            tmp_dest += "_"
+
+        if not args.dryrun:
+            os.mkdir(tmp_dest)  # We already know the parent exists.
+
+        for entry in self.contents(args):
+            if isinstance(entry, File):
+                try:
+                    entry.download(os.path.join(dest, entry.name), args)
+                except dropbox.exceptions.ApiError:
+                    pdbox.error("Couldn't download %s" % entry.dbx_uri(), args)
+            else:
+                entry.download(
+                    os.path.join(dest, entry.name),
+                    args,
+                    tmp_dest=os.path.join(tmp_dest, entry.name),
+                )
+
+        pdbox.info("Downloaded %s to %s" % (self.dbx_uri(), dest), args)
+
+        if not tmp_dest and not args.dryrun:
+            # The call on the root folder being downloaded.
+            if os.path.isfile(dest):
+                os.remove(dest)
+            elif os.path.isdir(dest):
+                shutil.rmtree(dest)
+            shutil.move(tmp_dest, dest)
 
     def contents(self, args=None):
         """
@@ -155,7 +223,7 @@ class Folder(DbxObj):
                 pdbox.debug(e, args)
         return entries
 
-    def sync(self, dest, args=None):
+    def sync(self, dest, args):
         """
         Synchronize this folder's contents to another Dropbox folder.
         dest can be a string or a DbxObj.

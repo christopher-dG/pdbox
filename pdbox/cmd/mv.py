@@ -2,7 +2,7 @@ import dropbox
 import os
 import pdbox
 
-from pdbox.models import from_local, from_remote, LocalFolder
+from pdbox.models import from_local, from_remote, File, LocalFolder
 from pdbox.util import fail, normpath, overwrite
 
 
@@ -36,11 +36,85 @@ def mv(args):
 
 
 def mv_inside(args):
-    pass
+    src = normpath(args.src)
+    dest = normpath(args.dst)
+
+    try:
+        remote_src = from_remote(src)
+    except Exception as e:
+        if not isinstance(e, dropbox.exceptions.ApiError):
+            pdbox.debug(e, args)
+        fail("dbx:/%s couldn't be found" % src, args)
+
+    try:
+        remote_dest = from_remote(dest)
+    except Exception as e:
+        if not isinstance(e, dropbox.exceptions.ApiError):
+            pdbox.debug(e, args)
+    else:
+        if not isinstance(remote_dest, File) and not args.recursive:
+            fail(
+                "%s is a folder and --recursive is not set" %
+                remote_dest.dbx_uri(),
+                args,
+            )
+        if not overwrite(remote_dest.dbx_uri(), args):
+            fail("Cancelled", args)
+
+        try:
+            remote_dest.delete(args)
+        except dropbox.exceptions.ApiError:
+            fail("%s could not be overwritten" % remote_dest.dbx_uri(), args)
+
+    try:
+        remote_src.move(dest, args)
+    except dropbox.exceptions.ApiError:
+        fail(
+            "%s could not be moved to dbx:/%s" %
+            (remote_src.dbx_uri(), dest),
+            args,
+        )
 
 
 def mv_from(args):
-    pass
+    """Move a file from Dropbox."""
+    src = normpath(args.src)
+    dest = os.path.normpath(args.dst)
+
+    try:
+        local = from_local(dest, args)
+    except ValueError as e:
+        pdbox.debug(e, args)
+    else:  # Something exists here.
+        if not overwrite(local.path, args):
+            fail("Cancelled", args)
+
+    try:
+        remote = from_remote(src, args)
+    except Exception as e:
+        if not isinstance(e, dropbox.exceptions.ApiError):
+            pdbox.debug(e)
+        fail("Couldn't find dbx:/%s" % src, args)
+
+    if not isinstance(remote, File) and not args.recursive:
+        fail(
+            "%s is a folder and --recursive is not set" % remote.dbx_uri(),
+            args,
+        )
+
+    try:
+        remote.download(dest, args)
+    except dropbox.exceptions.ApiError:
+        fail("Couldn't download %s" % remote.dbx_uri(), args)
+    except Exception as e:  # Some other exception, probably FS related.
+        dropbox.debug(e, args)
+        fail(
+            "Something went wrong, check %s for your download" %
+            pdbox.TMP_DOWNLOAD_DIR,
+            args,
+        )
+
+    remote.delete(args)
 
 
 def mv_to(args):
