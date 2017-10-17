@@ -1,4 +1,5 @@
 import dropbox
+import hashlib
 import math
 import os.path
 import pdbox
@@ -89,6 +90,19 @@ class File(DbxObj):
 
     def __repr__(self):
         return "File{%s}" % self.path
+
+    def hash(self):
+        """Compute a file's content hash as it would be by Dropbox."""
+        # https://www.dropbox.com/developers/reference/content-hash
+        block = 1024 * 1024 * 4
+        hasher = hashlib.sha256()
+        with open(self.path, "rb") as f:
+            while True:
+                chunk = f.read(block)
+                if not chunk:
+                    break
+                hasher.update(hashlib.sha256(chunk).digest())
+        return hasher.hexdigest()
 
     def download(self, dest, args):
         """
