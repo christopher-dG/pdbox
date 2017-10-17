@@ -1,12 +1,11 @@
 import os
 import pdbox.utils as utils
-import sys
 
 from nose.tools import assert_raises
 from . import FakeArgs, nofile, testfile
 
 
-fa = FakeArgs()
+fa = FakeArgs(quiet=True)
 
 
 def test_normpath():
