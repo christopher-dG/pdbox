@@ -1,12 +1,11 @@
 import os
 import pdbox.utils as utils
-import sys
 
 from nose.tools import assert_raises
 from . import FakeArgs, nofile, testfile
 
 
-fa = FakeArgs()
+fa = FakeArgs(quiet=True)
 
 
 def test_normpath():
@@ -29,7 +28,7 @@ def test_isize():
 
 def test_execute():
     execute = utils.execute
-    assert_raises(FileNotFoundError, execute, fa, os.stat, nofile)
+    assert_raises(Exception, execute, fa, os.stat, nofile)
     assert isinstance(execute(fa, os.stat, testfile), os.stat_result)
 
 

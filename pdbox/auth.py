@@ -49,7 +49,7 @@ def get_token():
             with open(pdbox.TOKEN_PATH) as f:
                 pdbox.debug("Using token from file")
                 token = f.read()
-        except FileNotFoundError:
+        except:
             pdbox.debug("Generating new token")
             try:
                 token = pdbox.auth.auth_flow()

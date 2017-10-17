@@ -96,7 +96,7 @@ class File(DbxObj):
         THIS WILL OVERWRITE EXISTING DATA!!!
         Raises:
         - dropbox.exceptions.ApiError(dropbox.files.DownloadError)
-        - FileNotFoundError
+        - Exception
         """
         tmp_dest = os.path.join(pdbox.TMP_DOWNLOAD_DIR, os.path.basename(dest))
         while os.path.exists(tmp_dest):
@@ -122,7 +122,7 @@ class File(DbxObj):
             if os.path.isfile(tmp_dest):
                 os.rename(tmp_dest, dest)
             else:  # File disappeared somehow.
-                raise FileNotFoundError(
+                raise Exception(
                     "%s was downloaded to %s, but it can't be found there" %
                     (self.dbx_uri(), tmp_dest),
                 )
@@ -259,7 +259,7 @@ class Folder(DbxObj):
 
         if args.delete and dest_contents:
             # Delete anything in the destination folder not in this one.
-            names = [e.name for e in src_contents]
+            names = [entry.name for entry in src_contents]
             for entry in dest_contents:
                 if entry.name not in names:
                     try:

@@ -110,7 +110,9 @@ def cp_from(args):
 
     try:
         remote.download(dest, args)
-    except dropbox.exceptions.ApiError:
+    except Exception as e:
+        if not isinstance(e, dropbox.exceptions.ApiError):
+            pdbox.debug(e, args)
         fail("Couldn't download %s" % remote.dbx_uri(), args)
 
 
