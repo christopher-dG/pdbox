@@ -99,7 +99,7 @@ def sync_to(args):
         fail(e, args)
 
     if not isinstance(folder, LocalFolder):
-        fail("%s is not a folder, use cp to upload files", src, args)
+        fail("%s is a file, use cp to upload files", src, args)
     if folder.islink and not args.follow_symlinks:
         fail("%s is a symlink and --no-follow-symlinks is set", src, args)
 
@@ -107,10 +107,9 @@ def sync_to(args):
         remote = from_remote(dest, args)
     except Exception as e:
         pdbox.debug(e, args)
-        remote = None
-
-    if remote and isinstance(remote, File):
-        fail("%s already exists as a file" % remote.dbx_uri())
+    else:
+        if isinstance(remote, File):
+            fail("%s already exists as a file" % remote.dbx_uri())
 
     try:
         folder.sync(dest, args)

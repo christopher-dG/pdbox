@@ -58,8 +58,7 @@ def cp_inside(args):
         if not isinstance(e, dropbox.exceptions.ApiError):
             pdbox.debug(e, args)
     else:  # Something exists here.
-        if not overwrite(remote_dest.dbx_uri(), args):
-            fail("Cancelled", args)
+        overwrite(remote_dest.dbx_uri(), args) or fail("Cancelled", args)
 
         # There doesn't seem to be a way to copy and overwrite at the same
         # time, so we'll delete and then copy.
@@ -91,8 +90,7 @@ def cp_from(args):
     except ValueError as e:
         pdbox.debug(e, args)
     else:  # Something exists here.
-        if not overwrite(local.path, args):
-            fail("Cancelled", args)
+        overwrite(local.path, args) or fail("Cancelled", args)
 
     try:
         remote = from_remote(src, args)
@@ -137,10 +135,9 @@ def cp_to(args):
         if not isinstance(e, dropbox.exceptions.ApiError):
             pdbox.debug(e, args)
     else:
-        if not isinstance(remote, File):  # Is a folder.
+        if isinstance(remote, File):
             fail("%s is a folder" % remote.dbx_uri(), args)
-        if not overwrite(remote.dbx_uri(), args):
-            fail("Cancelled", args)
+        overwrite(remote.dbx_uri(), args) or fail("Cancelled", args)
 
     try:
         local.upload(dest, args)

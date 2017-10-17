@@ -60,7 +60,7 @@ def display(folder, entries, args, depth=1):
             (nfiles, plur(nfiles), nfolders, plur(nfolders), sz),
         )
 
-    print()
+    print("")
 
     if args.recursive and (args.maxdepth == -1 or depth < args.maxdepth):
         for e in filter(lambda e: isinstance(e, Folder), entries):

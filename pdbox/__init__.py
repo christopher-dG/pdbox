@@ -56,7 +56,7 @@ if not os.path.exists(TMP_DOWNLOAD_DIR):
     os.makedirs(TMP_DOWNLOAD_DIR)
 
 
-from . import argparse  # noqa
+from . import parsing  # noqa
 from . import auth  # noqa
 from . import models  # noqa
 from . import cmd  # noqa

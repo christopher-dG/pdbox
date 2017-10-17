@@ -52,7 +52,7 @@ def auth_flow(args):
     try:
         code = input("Enter the authorization code here: ").strip()
     except KeyboardInterrupt:
-        print()
+        print("")
         fail("Cancelled", args)
 
     client = boto3.client(
@@ -64,7 +64,7 @@ def auth_flow(args):
 
     try:
         response = client.invoke(
-            FunctionName="pdboxGetAuthURL",
+            FunctionName="pdboxGetAuthToken",
             Payload=bytes("{\"code\": \"%s\"}" % code, "utf-8"),
         )
     except Exception as e:

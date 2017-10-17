@@ -58,8 +58,7 @@ def mv_inside(args):
                 remote_dest.dbx_uri(),
                 args,
             )
-        if not overwrite(remote_dest.dbx_uri(), args):
-            fail("Cancelled", args)
+        overwrite(remote_dest.dbx_uri(), args) or fail("Cancelled", args)
 
         try:
             remote_dest.delete(args)
@@ -86,8 +85,7 @@ def mv_from(args):
     except ValueError as e:
         pdbox.debug(e, args)
     else:  # Something exists here.
-        if not overwrite(local.path, args):
-            fail("Cancelled", args)
+        overwrite(local.path, args) or fail("Cancelled", args)
 
     try:
         remote = from_remote(src, args)
@@ -138,8 +136,7 @@ def mv_to(args):
         if not isinstance(e, dropbox.exceptions.ApiError):
             pdbox.debug(e, args)
     else:
-        if not overwrite(remote.dbx_uri(), args):
-            fail("Cancelled", args)
+        overwrite(remote.dbx_uri(), args) or fail("Cancelled", args)
 
     try:
         local.upload(dest, args)

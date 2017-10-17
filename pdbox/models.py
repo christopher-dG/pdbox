@@ -166,7 +166,7 @@ class Folder(DbxObj):
         THIS WILL OVERWRITE EXISTING DATA!!!
         Raises:
         - dropbox.exceptions.ApiError(dropbox.files.DownloadError)
-        - FileNotFoundErro
+        - Exception
         """
         if not tmp_dest:
             tmp_dest = os.path.join(
