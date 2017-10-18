@@ -11,6 +11,6 @@ setup(
     keywords="terminal cli dropbox",
     packages=find_packages(),
     scripts=["bin/pdbox"],
-    install_requires=["appdirs", "boto3", "dropbox", "tabulate"],
+    install_requires=["appdirs", "dropbox", "requests", "tabulate"],
     zip_safe=True,
 )

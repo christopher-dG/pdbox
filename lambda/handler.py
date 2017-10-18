@@ -2,21 +2,28 @@ import dropbox
 import os
 
 
-def handler(payload, _):
-    """Authenticate the app to a Dropbox account and return the token."""
-    print("Code: %s" % payload["code"])
-
-    flow = dropbox.DropboxOAuth2FlowNoRedirect(
-        os.environ["PDBOX_KEY"],
-        os.environ["PDBOX_SECRET"],
-    )
-    flow.start()
-
+def handler(event, context):
+    """
+    Get an OAuth2 token for a user's Dropbox account
+    from an API Gateway event.
+    """
+    response = {
+        "isBase64Encoded": False,
+        "statusCode": 500,
+        "headers": {},
+        "body": "server error",
+    }
+    code = event["queryStringParameters"]["c"]
     try:
-        result = flow.finish(payload["code"])
+        flow = dropbox.DropboxOAuth2FlowNoRedirect(
+            os.environ["PDBOX_KEY"],
+            os.environ["PDBOX_SECRET"],
+        )
+        flow.start()
+        result = flow.finish(code)
     except Exception as e:
         print("Failure: %s" % e)
-        raise e
-    else:
-        print(result)
-        return result.access_token
+        return response
+    response["statusCode"] = 200
+    response["body"] = result.access_token
+    return response
