@@ -111,7 +111,6 @@ class RemoteObject(object):
         - ValueError
         - TypeError
         - DropboxError
-
         """
         dest = normpath(dest)
         remote_assert_empty(dest)
@@ -179,6 +178,7 @@ class RemoteFile(RemoteObject):
             pdbox.info("Downloaded %s to %s" % (self.uri, dest), args)
             return None
 
+        # TODO: Progress bars.
         meta = execute(
             args,
             pdbox.dbx.files_download_to_file,
@@ -195,7 +195,7 @@ class RemoteFile(RemoteObject):
         except:
             raise Exception(
                 "%s was downloaded to %s, but couldn't be moved to %s" %
-                (self.uri, tmp_dest),
+                (self.uri, tmp_dest, dest),
             )
 
         pdbox.info("Downloaded %s to %s" % (self.uri, dest), args)
