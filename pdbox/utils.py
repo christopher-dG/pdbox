@@ -4,11 +4,16 @@ import pdbox
 import sys
 
 
+class DropboxError(BaseException):
+    """A wrapper for dropbox.exceptions.ApiError contents."""
+    pass
+
+
 def execute(ns, func, *args, **kwargs):
     """
     Execute a method and return its output, logging its error if it raises.
     First argument is an argparse.Namespace, second is the method to call.
-    Raises: dropbox.exceptions.ApiError
+    Raises: DropboxError
     """
     try:
         return func(*args, **kwargs)
@@ -18,7 +23,7 @@ def execute(ns, func, *args, **kwargs):
             (func.__name__, args, e.error),
             ns,
         )
-        raise e
+        raise DropboxError(e.error)
     except dropbox.exceptions.BadInputError as e:
         pdbox.debug(e, ns)
         fail(
