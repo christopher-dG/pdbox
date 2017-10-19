@@ -20,6 +20,10 @@ def get_remote(path, args=None, meta=None):
             return RemoteFile(None, meta=meta)
         if isinstance(meta, dropbox.files.FolderMetadata):
             return RemoteFolder(None, meta=meta)
+
+    path = normpath(path)
+    if path == "/":
+        return RemoteFolder(path)
     try:
         meta = execute(args, pdbox.dbx.files_get_metadata, path)
     except DropboxError:
@@ -40,6 +44,7 @@ def get_local(path, args=None):
     Get a LocalFile or LocalFolder from path.
     Raises: ValueError
     """
+    path = os.path.abspath(path)
     if os.path.isfile(path):
         return LocalFile(path, args)
     if os.path.isdir(path):
@@ -69,7 +74,7 @@ def local_assert_empty(path, args):
     Assert that nothing exists at path locally.
     Raises: ValueError
     """
-    path = os.path.normpath(path)
+    path = os.path.abspath(path)
     if os.path.exists(path):
         raise ValueError("Something exists at %s" % path)
 
@@ -86,7 +91,7 @@ class RemoteObject(object):
             pdbox.debug("Metadata response: %s" % result.metadata, args)
         pdbox.info("Deleted %s" % self.uri, args)
 
-    def copy(self, dest, args):
+    def copy(self, dest, args, overwrite=False):
         """
         Copy a file or folder to dest inside Dropbox.
         Raises:
@@ -95,9 +100,27 @@ class RemoteObject(object):
         - DropboxError
         """
         dest = normpath(dest)
-        remote_assert_empty(dest)
+        try:
+            remote = get_remote(dest, args)
+        except ValueError:
+            remote = None
+        except TypeError:
+            raise ValueError(
+                "Something exists at dbx:/%s that can't be overwritten" % dest
+            )
+        else:
+            if not overwrite:
+                raise ValueError("Something exists at %s" % remote.uri)
+            if self.hash == remote.hash:
+                pdbox.info(
+                    "%s and %s are identical" % (self.uri, remote.uri),
+                    args,
+                )
+                return
 
         if not args.dryrun:
+            if overwrite and remote:
+                remote.delete(args)
             result = execute(args, pdbox.dbx.files_copy_v2, self.path, dest)
             pdbox.debug("Metadata respones: %s" % result.metadata)
         pdbox.info("Copied %s to dbx:/%s" % (self.uri, dest), args)
@@ -113,7 +136,7 @@ class RemoteObject(object):
         - DropboxError
         """
         dest = normpath(dest)
-        remote_assert_empty(dest)
+        remote_assert_empty(dest, args)
 
         if not args.dryrun:
             result = execute(args, pdbox.dbx.files_move_v2, self.path, dest)
@@ -150,7 +173,7 @@ class RemoteFile(RemoteObject):
         self.hash = meta.content_hash  # Hash for comparing the contents.
         self.uri = "dbx:/%s" % self.path  # Convenience field for display.
 
-    def download(self, dest, args, is_r=False):
+    def download(self, dest, args, overwrite=False, is_r=False):
         """
         Download this file to dest locally.
         Raises:
@@ -159,13 +182,20 @@ class RemoteFile(RemoteObject):
         - Exception
         is_r is just here to avoid having to do a bunch of manual type checks.
         """
-        dest = os.path.normpath(dest)
+        dest = os.path.abspath(dest)
         try:
             local = get_local(dest, args)
         except ValueError:
             pass
         else:
-            raise ValueError("%s already exists" % local.path)
+            if local.hash(args) == self.hash:
+                pdbox.info(
+                    "%s and %s are identical" % (self.uri, local.path),
+                    args,
+                )
+                return
+            if not overwrite:
+                raise ValueError("%s already exists" % local.path)
 
         tmp_dest = os.path.join(
             pdbox.TMP_DOWNLOAD_DIR,
@@ -213,6 +243,7 @@ class RemoteFolder(RemoteObject):
                 self.path = "/"
                 self.name = "/"
                 self.uri = "dbx://"
+                return
             try:
                 meta = execute(args, pdbox.dbx.files_get_metadata, path)
             except DropboxError:
@@ -236,7 +267,7 @@ class RemoteFolder(RemoteObject):
         - DropboxError
         """
         path = normpath(path)
-        remote_assert_empty(path)
+        remote_assert_empty(path, args)
         if not args.dryrun:
             result = execute(args, pdbox.dbx.files_create_folder_v2, path)
             pdbox.debug("Metadata response: %s" % result.metadata, args)
@@ -281,8 +312,8 @@ class RemoteFolder(RemoteObject):
         If is_r is set, then this call is occuring as part of a parent
         folder download, so don't move any files before returning.
         """
-        dest = os.path.normpath(dest)
-        local_assert_empty(dest)
+        dest = os.path.abspath(dest)
+        local_assert_empty(dest, args)
 
         tmp_dest = os.path.join(
             pdbox.TMP_DOWNLOAD_DIR,
@@ -349,7 +380,7 @@ class LocalFile(object):
         self.path = path  # Path the the file, including name.
         self.name = os.path.basename(self.path)  # File name with extension.
         self.islink = os.path.islink(self.path)  # If the file is a symlink.
-        self.size = os.getsize(self.path)  # Size in bytes.
+        self.size = os.path.getsize(self.path)  # Size in bytes.
 
     def hash(self, args=None):
         """Get this file's hash according to Dropbox's algorithm."""
@@ -365,7 +396,7 @@ class LocalFile(object):
         pdbox.debug("Hash for %s: %s" % (self.path, digest), args)
         return digest
 
-    def upload(self, dest, args):
+    def upload(self, dest, args, overwrite=False):
         """
         Upload this file to dest in Dropbox.
         Raises:
@@ -373,14 +404,32 @@ class LocalFile(object):
         - DropboxError
         """
         dest = normpath(dest)
-        remote_assert_empty(dest)
+        try:
+            remote = get_remote(dest, args)
+        except ValueError:
+            pass
+        except TypeError:
+            raise ValueError("Something exists at dbx:/%s" % dest)
+        else:
+            if self.hash(args) == remote.hash:
+                pdbox.info(
+                    "%s and %s are identical" % (self.path, remote.uri),
+                    args,
+                )
+                return
+            if not overwrite:
+                raise ValueError("%s exists" % remote.uri)
 
-        pdbox.debug("Chunk size: %.2MB" % args.chunksize, args)
+        pdbox.debug("Chunk size: %.2f MB" % args.chunksize, args)
         if args.dryrun:
             pdbox.info("Uploaded %s to dbx:/%s" % (self.path, dest), args)
             return None
 
-        mode = dropbox.files.WriteMode.add
+        if overwrite:
+            mode = dropbox.files.WriteMode.overwrite
+        else:
+            mode = dropbox.files.WriteMode.add
+
         chunk = int(args.chunksize * 1024 * 1024)  # Convert B to MB.
 
         with open(self.path, "rb") as f:
@@ -389,7 +438,7 @@ class LocalFile(object):
 
         # TODO: Progress bars.
         if sz < chunk:  # One-shot upload.
-            meta = execute(args, pdbox.dbx.files_upload, data, mode)
+            meta = execute(args, pdbox.dbx.files_upload, data, dest, mode)
         else:  # Multipart upload.
             nchunks = math.ceil(sz / chunk)
             start = execute(args, pdbox.dbx.files_upload_session_start, f[0])
@@ -472,7 +521,7 @@ class LocalFolder(object):
         - DropboxError
         """
         dest = normpath(dest)
-        remote_assert_empty(dest)
+        remote_assert_empty(dest, args)
 
         remote = RemoteFolder.create(dest, args)
         for entry in remote.contents(args):
