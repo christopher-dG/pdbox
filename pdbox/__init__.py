@@ -59,4 +59,4 @@ if not os.path.exists(TMP_DOWNLOAD_DIR):
 from . import parsing  # noqa
 from . import auth  # noqa
 from . import models  # noqa
-from . import cmd  # noqa
+from . import cli  # noqa

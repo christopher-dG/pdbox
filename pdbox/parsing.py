@@ -1,6 +1,7 @@
 import argparse
 import logging
 import pdbox
+import pdbox.cli as cli
 
 
 def parse_args():
@@ -33,7 +34,7 @@ def parse_cp(subparsers):
         "cp",
         help="copy a file to/from/inside Dropbox",
     )
-    cp.set_defaults(func=pdbox.cmd.cp, follow_symlinks=True)
+    cp.set_defaults(func=cli.cp, follow_symlinks=True)
     cp.add_argument(
         "src",
         metavar="<source>",
@@ -91,7 +92,7 @@ def parse_ls(subparsers):
         "ls",
         help="list a folder inside Dropbox",
     )
-    ls.set_defaults(func=pdbox.cmd.ls)
+    ls.set_defaults(func=cli.ls)
     ls.add_argument(
         "path",
         metavar="<path>",
@@ -130,7 +131,7 @@ def parse_mf(subparsers):
         "mf",
         help="create a new folder inside Dropbox",
     )
-    mf.set_defaults(func=pdbox.cmd.mf)
+    mf.set_defaults(func=cli.mf)
     mf.add_argument(
         "path",
         metavar="<path>",
@@ -149,7 +150,7 @@ def parse_mv(subparsers):
         "mv",
         help="move a file or object inside Dropbox",
     )
-    mv.set_defaults(func=pdbox.cmd.mv)
+    mv.set_defaults(func=cli.mv)
     mv.add_argument(
         "src",
         metavar="<source>",
@@ -213,7 +214,7 @@ def parse_rf(subparsers):
         "rf",
         help="delete a folder inside Dropbox",
     )
-    rf.set_defaults(func=pdbox.cmd.rf)
+    rf.set_defaults(func=cli.rf)
     rf.add_argument(
         "path",
         metavar="<folder>",
@@ -239,7 +240,7 @@ def parse_rm(subparsers):
         "rm",
         help="delete a file or folder inside Dropbox",
     )
-    rm.set_defaults(func=pdbox.cmd.rm)
+    rm.set_defaults(func=cli.rm)
     rm.add_argument(
         "path",
         metavar="<path>",
@@ -277,7 +278,7 @@ def parse_sync(subparsers):
         "sync",
         help="synchronize a folder to/from/inside Dropbox",
     )
-    sync.set_defaults(func=pdbox.cmd.sync)
+    sync.set_defaults(func=cli.sync)
     sync.add_argument(
         "src",
         metavar="<source>",
