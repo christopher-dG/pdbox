@@ -64,6 +64,11 @@ def normpath(path):
     return path
 
 
+def dbx_uri(path):
+    """Convert some path into dbx://path."""
+    return "dbx:/%s" % normpath(path)
+
+
 def isize(n):
     """Get a readable size from a number of bytes."""
     if n >= 1024**3:

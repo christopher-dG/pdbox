@@ -1,8 +1,5 @@
-import dropbox
-import pdbox
-
-from pdbox.models import from_remote, File
-from pdbox.utils import fail, normpath
+from pdbox.newmodels import get_remote, RemoteFile
+from pdbox.utils import DropboxError, dbx_uri, fail
 
 
 def rm(args):
@@ -15,17 +12,15 @@ def rm(args):
     - recursive (bool)
     - only_show_errors (bool)
     """
-    path = normpath(args.path)
     try:
-        remote = from_remote(path, args)
-    except Exception as e:
-        pdbox.debug(e)
-        fail("dbx:/%s was not found" % path, args)
+        remote = get_remote(args.path, args)
+    except (ValueError, TypeError):
+        fail("%s could not be found" % dbx_uri(args.path), args)
 
-    if not isinstance(remote, File) and not args.recursive:
-        fail("dbx:/%s is a folder and --recursive is not set" % path, args)
+    if not isinstance(remote, RemoteFile) and not args.recursive:
+        fail("%s is a folder and --recursive is not set" % remote.uri, args)
 
     try:
         remote.delete(args)
-    except dropbox.exceptions.ApiError:
-        fail("%s could not be deleted" % remote.dbx_uri(), args)
+    except DropboxError:
+        fail("%s could not be deleted" % remote.uri, args)

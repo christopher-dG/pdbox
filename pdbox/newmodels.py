@@ -5,7 +5,7 @@ import os
 import pdbox
 import shutil
 
-from pdbox.utils import DropboxError, execute, normpath
+from pdbox.utils import DropboxError, dbx_uri, execute, normpath
 
 
 def get_remote(path, args=None, meta=None):
@@ -27,16 +27,16 @@ def get_remote(path, args=None, meta=None):
     try:
         meta = execute(args, pdbox.dbx.files_get_metadata, path)
     except DropboxError:
-        raise ValueError("dbx:/%s could not be found" % path)
+        raise ValueError("%s could not be found" % dbx_uri(path))
     if isinstance(meta, dropbox.files.DeletedMetadata):
-        pdbox.debug("dbx:/%s was recently deleted" % path, args)
-        raise ValueError("dbx:/%s does not exist" % path)
+        pdbox.debug("%s was recently deleted" % dbx_uri(path), args)
+        raise ValueError("%s does not exist" % dbx_uri(path))
     if isinstance(meta, dropbox.files.FileMetadata):
         return RemoteFile(None, args, meta=meta)
     if isinstance(meta, dropbox.files.FolderMetadata):
         return RemoteFolder(None, args, meta=meta)
     pdbox.debug("Got unexpected metadata response: %s" % meta, args)
-    raise TypeError("Unexpected response type from dbx:/%s" % path)
+    raise TypeError("Unexpected response type from %s" % dbx_uri(path))
 
 
 def get_local(path, args=None):
@@ -62,7 +62,7 @@ def remote_assert_empty(path, args):
         remote = get_remote(path, args)
     except TypeError as e:
         pdbox.debug(e, args)
-        raise ValueError("Something exists at dbx:/%s" % path)
+        raise ValueError("Something exists at %s" % dbx_uri(path))
     except ValueError:  # Nothing exists, which is what we want.
         pass
     else:
@@ -106,7 +106,8 @@ class RemoteObject(object):
             remote = None
         except TypeError:
             raise ValueError(
-                "Something exists at dbx:/%s that can't be overwritten" % dest
+                "Something exists at %s that can't be overwritten" %
+                dbx_uri(dest),
             )
         else:
             if not overwrite:
@@ -123,11 +124,11 @@ class RemoteObject(object):
                 remote.delete(args)
             result = execute(args, pdbox.dbx.files_copy_v2, self.path, dest)
             pdbox.debug("Metadata respones: %s" % result.metadata)
-        pdbox.info("Copied %s to dbx:/%s" % (self.uri, dest), args)
+        pdbox.info("Copied %s to %s" % (self.uri, dbx_uri(dest)), args)
         if not args.dryrun:
             return get_remote(None, args, meta=result.metadata)
 
-    def move(self, dest, args):
+    def move(self, dest, args, overwrite=False):
         """
         Move a file or folder to dest inside Dropbox.
         Raises:
@@ -141,7 +142,7 @@ class RemoteObject(object):
         if not args.dryrun:
             result = execute(args, pdbox.dbx.files_move_v2, self.path, dest)
             pdbox.debug("Metadata response: %s" % result.metadata)
-        pdbox.info("Moved %s to dbx:/%s" % (self.path, dest), args)
+        pdbox.info("Moved %s to %s" % (self.path, dbx_uri(dest)), args)
         if not args.dryrun:
             return get_remote(None, args, meta=result.metadata)
 
@@ -157,12 +158,12 @@ class RemoteFile(RemoteObject):
             try:
                 meta = execute(args, pdbox.dbx.files_get_metadata, path)
             except DropboxError:
-                raise ValueError("dbx:/%s could not be found" % path)
+                raise ValueError("%s could not be found" % dbx_uri(path))
             if isinstance(meta, dropbox.files.FolderMetadata):
-                raise ValueError("dbx:/%s is a folder" % meta.path_display)
+                raise ValueError("%s is a folder" % dbx_uri(meta.path_display))
             if isinstance(meta, dropbox.files.DeletedMetadata):
-                pdbox.debug("dbx:/%s was recently deleted" % path, args)
-                raise ValueError("dbx:/%s does not exist")
+                pdbox.debug("%s was recently deleted" % dbx_uri(path), args)
+                raise ValueError("%s does not exist" % dbx_uri(path))
 
         self.id = meta.id  # File ID, not sure how this can be used.
         self.size = meta.size  # Size in bytes.
@@ -171,7 +172,7 @@ class RemoteFile(RemoteObject):
         self.modified = meta.server_modified  # Last modified time.
         self.rev = meta.rev  # Revision, not sure how this can be used.
         self.hash = meta.content_hash  # Hash for comparing the contents.
-        self.uri = "dbx:/%s" % self.path  # Convenience field for display.
+        self.uri = dbx_uri(self.path)  # Convenience field for display.
 
     def download(self, dest, args, overwrite=False, is_r=False):
         """
@@ -247,17 +248,17 @@ class RemoteFolder(RemoteObject):
             try:
                 meta = execute(args, pdbox.dbx.files_get_metadata, path)
             except DropboxError:
-                raise ValueError("dbx:/%s could not be found" % path)
+                raise ValueError("%s could not be found" % dbx_uri(path))
             if isinstance(meta, dropbox.files.FileMetadata):
-                raise ValueError("dbx:/%s is a file" % meta.path_display)
+                raise ValueError("%s is a file" % dbx_uri(meta.path_display))
             if isinstance(meta, dropbox.files.DeletedMetadata):
-                pdbox.debug("dbx:/%s was recently deleted" % path, args)
-                raise ValueError("dbx:/%s does not exist")
+                pdbox.debug("%s was recently deleted" % dbx_uri(path), args)
+                raise ValueError("%s does not exist" % dbx_uri(path))
 
         self.id = meta.id  # Folder ID, not sure how this can be used.
         self.path = meta.path_display  # Path to the folder, including name.
         self.name = meta.name  # Base name of the folder.
-        self.uri = "dbx:/%s" % self.path  # Convenience field for display.
+        self.uri = dbx_uri(self.path)  # Convenience field for display.
 
     def create(path, args):
         """
@@ -271,7 +272,7 @@ class RemoteFolder(RemoteObject):
         if not args.dryrun:
             result = execute(args, pdbox.dbx.files_create_folder_v2, path)
             pdbox.debug("Metadata response: %s" % result.metadata, args)
-        pdbox.info("Created new folder dbx:/%s" % path, args)
+        pdbox.info("Created new folder %s" % dbx_uri(path), args)
         if not args.dryrun:
             return RemoteFolder(None, args, meta=result.metadata)
 
@@ -348,7 +349,7 @@ class RemoteFolder(RemoteObject):
         If dest is a LocalFolder or string, it is synchronized locally.
         If dest is a RemoteFolder, it is synchronized to that remote folder.
         """
-        if isinstance(other, str):
+        if isinstance(other, str) or isinstance(other, LocalFolder):
             return self.sync_local(other, args)
         else:
             return self.sync_remote(other, args)
@@ -409,7 +410,7 @@ class LocalFile(object):
         except ValueError:
             pass
         except TypeError:
-            raise ValueError("Something exists at dbx:/%s" % dest)
+            raise ValueError("Something exists at %s" % dbx_uri(dest))
         else:
             if self.hash(args) == remote.hash:
                 pdbox.info(
@@ -422,7 +423,7 @@ class LocalFile(object):
 
         pdbox.debug("Chunk size: %.2f MB" % args.chunksize, args)
         if args.dryrun:
-            pdbox.info("Uploaded %s to dbx:/%s" % (self.path, dest), args)
+            pdbox.info("Uploaded %s to %s" % (self.path, dbx_uri(dest)), args)
             return None
 
         if overwrite:
@@ -463,7 +464,7 @@ class LocalFile(object):
                 dropbox.files.CommitInfo(dest, mode),
             )
 
-        pdbox.info("Uploaded %s to dbx:/%s" % (self.path, dest), args)
+        pdbox.info("Uploaded %s to %s" % (self.path, dbx_uri(dest)), args)
         return RemoteFile(None, args, meta=meta)
 
     def delete(self, args):

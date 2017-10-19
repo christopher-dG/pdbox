@@ -1,8 +1,5 @@
-import dropbox
-import pdbox
-
-from pdbox.models import from_remote, Folder
-from pdbox.utils import fail, normpath
+from pdbox.newmodels import get_remote, RemoteFolder
+from pdbox.utils import DropboxError, dbx_uri, fail
 
 
 def mf(args):
@@ -13,17 +10,14 @@ def mf(args):
     - path (string)
     - dryrun (bool)
     """
-    path = normpath(args.path)
-
     try:
-        remote = from_remote(path)
-    except Exception as e:
-        if not isinstance(e, dropbox.exceptions.ApiError):
-            pdbox.debug(e)
+        remote = get_remote(args.path)
+    except (ValueError, TypeError):
+        pass
     else:
-        fail("%s already exists" % remote.dbx_uri(), args)
+        fail("%s already exists" % remote.uri, args)
 
     try:
-        Folder.create(path, args)
-    except dropbox.exceptions.ApiError:
-        fail("dbx:/%s could not be created" % path, args)
+        RemoteFolder.create(args.path, args)
+    except (ValueError, DropboxError):
+        fail("%s could not be created" % dbx_uri(args.path), args)

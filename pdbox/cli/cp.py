@@ -2,7 +2,7 @@ import os.path
 import pdbox
 
 from pdbox.newmodels import get_local, get_remote, RemoteFile, LocalFolder
-from pdbox.utils import DropboxError, fail, overwrite
+from pdbox.utils import DropboxError, dbx_uri, fail, overwrite
 
 
 def cp(args):
@@ -38,7 +38,7 @@ def cp_inside(args):
     try:
         remote_src = get_remote(args.src, args)
     except (ValueError, TypeError) as e:
-        fail("dbx:/%s was not found" % args.src, args)
+        fail("%s was not found" % dbx_uri(args.src), args)
 
     if not isinstance(remote_src, RemoteFile):
         fail("%s is a folder, use sync to copy folders" % remote_src.uri, args)
@@ -49,8 +49,8 @@ def cp_inside(args):
         delete = False
     except TypeError:
         fail(
-            "Something exists at dbx://%s that can't be overwritten" %
-            args.dst,
+            "Something exists at %s that can't be overwritten" %
+            dbx_uri(args.dst),
             args,
         )
     else:  # Something exists here.
@@ -65,7 +65,8 @@ def cp_inside(args):
         remote_src.copy(args.dst, args, overwrite=delete)
     except DropboxError:
         fail(
-            "%s could not be copied to dbx:/%s" % (remote_src.uri, args.dest),
+            "%s could not be copied to %s" %
+            (dbx_uri(remote_src.uri), args.dest),
             args,
         )
 
@@ -76,7 +77,7 @@ def cp_from(args):
         remote = get_remote(args.src, args)
     except (ValueError, TypeError) as e:
         pdbox.debug(e, args)
-        fail("Couldn't find dbx:/%s" % args.src, args)
+        fail("Couldn't find %s" % dbx_uri(args.src), args)
 
     if not isinstance(remote, RemoteFile):
         fail(
@@ -120,7 +121,7 @@ def cp_to(args):
     except ValueError:  # Remote file probably doesn't exist.
         delete = False
     except TypeError:
-        fail("Something exists at dbx:/%s" % args.dst, args)
+        fail("Something exists at %s" % dbx_uri(args.dst), args)
     else:
         if not isinstance(remote, RemoteFile):
             # Place the file inside the folder.
@@ -134,4 +135,4 @@ def cp_to(args):
     try:
         local.upload(args.dst, args, overwrite=delete)
     except DropboxError:
-        fail("Uploading %s to dbx:/%s failed" % (args.src, args.dst), args)
+        fail("Uploading %s to %s failed" % (dbx_uri(args.src), args.dst), args)
