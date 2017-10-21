@@ -3,8 +3,7 @@
 [![Build Status](https://travis-ci.org/christopher-dG/pdbox.svg?branch=master)](https://travis-ci.org/christopher-dG/pdbox)
 [![Project Status](http://www.repostatus.org/badges/latest/wip.svg)](http://www.repostatus.org/#wip)
 
-**A no-frills CLI for Dropbox inspired by
-[AWS's S3 interface](http://docs.aws.amazon.com/cli/latest/reference/s3/index.html).**
+**A no-frills CLI for Dropbox.**
 
 ## Pre-Release Note
 
@@ -31,16 +30,16 @@ $ python setup.py install
 ## Usage
 
 ```
-usage: pdbox [-h] [-d] {cp,ls,mf,mv,rf,rm,sync} ...
+usage: pdbox [-h] [-d] {ls,cp,mv,mkdir,rm,rmdir,sync} ...
 
 positional arguments:
-  {cp,ls,mf,mv,rf,rm,sync}
-    cp                  copy a file to/from/inside Dropbox
+  {ls,cp,mv,mkdir,rm,rmdir,sync}
     ls                  list a folder inside Dropbox
-    mf                  create a new folder inside Dropbox
+    cp                  copy a file to/from/inside Dropbox
     mv                  move a file or object inside Dropbox
-    rf                  delete a folder inside Dropbox
+    mkdir               create a new folder inside Dropbox
     rm                  delete a file or folder inside Dropbox
+    rmdir               delete a folder inside Dropbox
     sync                synchronize a folder to/from/inside Dropbox
 
 optional arguments:

@@ -2,7 +2,7 @@ from pdbox.models import get_remote, RemoteFolder
 from pdbox.utils import DropboxError, dbx_uri, fail
 
 
-def rf(args):
+def rmdir(args):
     """
     Delete a folder inside Dropbox.
 

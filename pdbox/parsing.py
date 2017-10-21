@@ -15,12 +15,12 @@ def parse_args():
     )
     subparsers = parser.add_subparsers(dest="cmd")
     subparsers.required = True
-    parse_cp(subparsers)
     parse_ls(subparsers)
-    parse_mf(subparsers)
+    parse_cp(subparsers)
     parse_mv(subparsers)
-    parse_rf(subparsers)
+    parse_mkdir(subparsers)
     parse_rm(subparsers)
+    parse_rmdir(subparsers)
     parse_sync(subparsers)
     args = parser.parse_args()
     if args.debug:
@@ -125,19 +125,19 @@ def parse_ls(subparsers):
     )
 
 
-def parse_mf(subparsers):
-    """Add arguments for the mf command."""
-    mf = subparsers.add_parser(
-        "mf",
+def parse_mkdir(subparsers):
+    """Add arguments for the mkdir command."""
+    mkdir = subparsers.add_parser(
+        "mkdir",
         help="create a new folder inside Dropbox",
     )
-    mf.set_defaults(func=cli.mf)
-    mf.add_argument(
+    mkdir.set_defaults(func=cli.mkdir)
+    mkdir.add_argument(
         "path",
         metavar="<path>",
         help="path to the new folder",
     )
-    mf.add_argument(
+    mkdir.add_argument(
         "--dryrun",
         action="store_true",
         help="display operations without performing them",
@@ -208,25 +208,25 @@ def parse_mv(subparsers):
     )
 
 
-def parse_rf(subparsers):
-    """Add arguments for the rf command."""
-    rf = subparsers.add_parser(
-        "rf",
+def parse_rmdir(subparsers):
+    """Add arguments for the rmdir command."""
+    rmdir = subparsers.add_parser(
+        "rmdir",
         help="delete a folder inside Dropbox",
     )
-    rf.set_defaults(func=cli.rf)
-    rf.add_argument(
+    rmdir.set_defaults(func=cli.rmdir)
+    rmdir.add_argument(
         "path",
         metavar="<folder>",
         help="folder to remove",
     )
-    rf.add_argument(
+    rmdir.add_argument(
         "--dryrun",
         action="store_true",
         help="display operations without performing them",
     )
 
-    rf.add_argument(
+    rmdir.add_argument(
         "-f",
         "--force",
         action="store_true",
