@@ -3,7 +3,7 @@ import os
 import pdbox
 import requests
 
-from pdbox.utils import fail
+from pdbox.utils import fail, input_compat
 
 
 def get_token(args):
@@ -15,7 +15,7 @@ def get_token(args):
         with open(pdbox.TOKEN_PATH) as f:
             pdbox.debug("Using token from file", args)
             token = f.read()
-    except:
+    except:  # File probably doesn't exist, so get a new token.
         pdbox.debug("Generating new token", args)
         try:
             token = auth_flow(args)
@@ -26,7 +26,10 @@ def get_token(args):
 
 
 def login(token):
-    """Log in to the Dropbox client."""
+    """
+    Log in to the Dropbox client.
+    Raises: AssertionError
+    """
     pdbox.dbx = dropbox.Dropbox(token, timeout=None)
 
 
@@ -35,6 +38,8 @@ def auth_flow(args):
     Get an auth code from the user, then send it to an API Gateway endpoint to
     authorize with the app.
     """
+    # This is what flow.start() returns, but it's static and always accessible
+    # so we can just print it out before actually starting the flow.
     auth_url = "https://www.dropbox.com/oauth2/authorize?response_type=code&client_id=kkdoudk5jlebl37"  # noqa
     endpoint = "https://jrqx349ulj.execute-api.us-east-1.amazonaws.com/pdbox/auth"  # noqa
 
@@ -44,19 +49,18 @@ def auth_flow(args):
 
     prompt = "Enter the authorization code here: "
     try:
-        try:
-            code = raw_input(prompt).strip()
-        except NameError:
-            code = input(prompt).strip()
+        code = input_compat(prompt)
     except KeyboardInterrupt:
         print("")
         fail("Cancelled", args)
 
+    # Call the authentication API to generate a token.
     response = requests.get("%s?c=%s" % (endpoint, code))
     if response.status_code != 200 or response.text == "server error":
         fail("Authorization failed", args)
 
     token = response.text
+    # Write the token to a file.
     if not os.path.exists(os.path.dirname(pdbox.TOKEN_PATH)):
         os.makedirs(os.path.dirname(pdbox.TOKEN_PATH))
     with open(pdbox.TOKEN_PATH, "w") as f:

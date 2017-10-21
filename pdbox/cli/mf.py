@@ -1,4 +1,4 @@
-from pdbox.newmodels import get_remote, RemoteFolder
+from pdbox.models import get_remote, RemoteFolder
 from pdbox.utils import DropboxError, dbx_uri, fail
 
 

@@ -48,12 +48,15 @@ def error(s, args=None):
         _logger.error(s)
 
 
+# The path to the OAuth2 token file.
 TOKEN_PATH = os.path.join(appdirs.user_data_dir("pdbox"), "pdbox_token")
+# The directory in which to store downloads before moving them.
 TMP_DOWNLOAD_DIR = os.path.join(appdirs.user_data_dir("pdbox"), "tmp")
-dbx = None  # To be populated on login.
+# dropbox.Dropbox to be populated on login.
+dbx = None
 
 if not os.path.exists(TMP_DOWNLOAD_DIR):
-    os.makedirs(TMP_DOWNLOAD_DIR)
+    os.makedirs(TMP_DOWNLOAD_DIR)  # This creates TOKEN_PATH's parent too.
 
 
 from . import parsing  # noqa

@@ -58,6 +58,9 @@ functionality and more, but rather for those looking for a quick, easy way to
 access their files when the full Dropbox client isn't practical, such as
 headless VMs or low-resource servers (or CLI addicts like me).
 
+Update: I was not aware of [dbxcli](https://github.com/dropbox/dbxcli) at the
+time of writing, this is awkward...
+
 ## Python 2
 
 This code is compatible with both Python 2 and 3 but
@@ -67,4 +70,5 @@ may affect you, in which case I recommend that you use Python 3.
 ## TODO
 
 * Much better test coverage
-* Local registry for efficient syncs
+* Folder sync command
+* A TUI (finally something you don't get with dbxcli!)

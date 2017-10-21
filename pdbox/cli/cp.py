@@ -1,7 +1,7 @@
 import os.path
 import pdbox
 
-from pdbox.newmodels import get_local, get_remote, RemoteFile, LocalFolder
+from pdbox.models import get_local, get_remote, RemoteFile, LocalFolder
 from pdbox.utils import DropboxError, dbx_uri, fail, overwrite
 
 

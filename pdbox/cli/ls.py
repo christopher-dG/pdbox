@@ -1,6 +1,6 @@
 import pdbox
 
-from pdbox.newmodels import get_remote, RemoteFolder
+from pdbox.models import get_remote, RemoteFolder
 from pdbox.utils import DropboxError, fail, isize, dbx_uri
 from tabulate import tabulate
 

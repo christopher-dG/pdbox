@@ -11,8 +11,9 @@ class DropboxError(BaseException):
 
 def execute(ns, func, *args, **kwargs):
     """
-    Execute a method and return its output, logging its error if it raises.
-    First argument is an argparse.Namespace, second is the method to call.
+    Execute a dropbox.Dropbox method and return its output, logging its error
+    if it raises. First argument is an argparse.Namespace, second is the
+    method to call.
     Raises: DropboxError
     """
     try:
@@ -25,6 +26,7 @@ def execute(ns, func, *args, **kwargs):
         )
         raise DropboxError(e.error)
     except dropbox.exceptions.BadInputError as e:
+        # This is usually an invalid token.
         pdbox.debug(e, ns)
         fail(
             "Your authentication token is invalid, "
@@ -48,18 +50,19 @@ def overwrite(path, args=None):
         pass
 
     try:
-        confirm = input("File %s exists: overwrite? [y/N] " % path)
+        confirm = input_compat("File %s exists: overwrite? [y/N] " % path)
     except KeyboardInterrupt:
         return False
     return confirm.lower() in ["y", "yes"]
 
 
 def normpath(path):
-    """Convert `path` into something that's compatible with Dropbox."""
+    """Convert path into something that's compatible with Dropbox."""
     if path.startswith("dbx://"):
-        path = path[6:]
-    path = "/" + path.replace(os.path.sep, "/")
-    while "//" in path:  # os.path.normpath won't work on Windows.
+        path = path[6:]  # Remove the prefix.
+    path = "/%s" % path.replace(os.path.sep, "/")  # Fix Windows paths.
+    # os.path.normpath won't work on Windows because we need forward slashes.
+    while "//" in path:  # Get rid of any double slashes.
         path = path.replace("//", "/")
     return path
 
@@ -71,11 +74,22 @@ def dbx_uri(path):
 
 def isize(n):
     """Get a readable size from a number of bytes."""
-    if n >= 1024**3:
-        return "%.2f GB" % (n / 1024.0**3)
-    elif n >= 1024**2:
-        return "%.2f MB" % (n / 1024.0**2)
+    if n >= 1024 ** 3:
+        return "%.2f GB" % (n / 1024.0 ** 3)
+    elif n >= 1024 ** 2:
+        return "%.2f MB" % (n / 1024.0 ** 2)
     elif n >= 1024:
         return "%.2f KB" % (n / 1024.0)
     else:
         return "%d B" % n
+
+
+def input_compat(prompt):
+    """
+    Get some user input.
+    Raises: KeyboardInterrupt
+    """
+    try:  # Python 2's input function evaluates the input (bad).
+        return raw_input(prompt).strip()
+    except NameError:
+        return input(prompt).strip()
