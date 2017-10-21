@@ -22,11 +22,10 @@ def test_local_file():
     f = LocalFile(tempfile)
     assert f.size == len(contents)
 
-    assert f.upload("/", FakeArgs()) is None
-
 
 def test_local_folder():
     LocalFolder = models.LocalFolder
+    fa = FakeArgs()
 
     assert_raises(ValueError, LocalFolder, nofile)
 
@@ -35,14 +34,14 @@ def test_local_folder():
     folder = LocalFolder(testdir)
     assert folder
     assert folder.path == os.path.join(os.getcwd(), testdir)
-    assert not folder.contents()
+    assert not folder.contents(fa)
 
     folder = LocalFolder(tempdir)
     os.mknod(os.path.join(tempdir, "a"))
     os.mknod(os.path.join(tempdir, "b"))
     os.mkdir(os.path.join(tempdir, "c"))
     os.mknod(os.path.join(tempdir, "c", "d"))
-    assert set([os.path.relpath(f.path) for f in folder.contents()]) == set([
+    assert set([os.path.relpath(f.path) for f in folder.contents(fa)]) == set([
         os.path.join(tempdir, "a"),
         os.path.join(tempdir, "b"),
         os.path.join(tempdir, "c"),

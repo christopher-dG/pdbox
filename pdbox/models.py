@@ -101,12 +101,15 @@ class RemoteObject(object):
         else:  # Something exists here.
             if not overwrite:
                 raise ValueError("Something exists at %s" % remote.uri)
-            if self.hash == remote.hash:  # Nothing to update.
-                pdbox.info(
-                    "%s and %s are identical" % (self.uri, remote.uri),
-                    args,
-                )
-                return
+            try:
+                if self.hash == remote.hash:  # Nothing to update.
+                    pdbox.info(
+                        "%s and %s are identical" % (self.uri, remote.uri),
+                        args,
+                    )
+                    return
+            except AttributeError:  # RemoteFolder doesn't have a hash.
+                pass
 
         if not args.dryrun:
             if overwrite and remote:
@@ -431,12 +434,13 @@ class LocalFile(object):
         except ValueError:  # Nothing exists at dest, nothing to worry about.
             pass
         else:  # Something exists here.
-            if self.hash(args) == remote.hash:  # Nothing to update.
-                pdbox.info(
-                    "%s and %s are identical" % (self.path, remote.uri),
-                    args,
-                )
-                return
+            if isinstance(remote, RemoteFile):
+                if self.hash(args) == remote.hash:  # Nothing to update.
+                    pdbox.info(
+                        "%s and %s are identical" % (self.path, remote.uri),
+                        args,
+                    )
+                    return
             if not overwrite:
                 raise ValueError("%s exists" % remote.uri)
 

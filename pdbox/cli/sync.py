@@ -1,7 +1,4 @@
-import os.path
-
-from pdbox.models import get_local, get_remote, RemoteFile, LocalFolder
-from pdbox.utils import DropboxError, dbx_uri, fail, overwrite
+from pdbox.utils import fail
 
 
 def sync(args):
