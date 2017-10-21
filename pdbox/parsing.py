@@ -2,6 +2,7 @@ import argparse
 import logging
 import pdbox
 import pdbox.cli as cli
+import pdbox.tui as tui
 
 
 def parse_args():
@@ -22,6 +23,7 @@ def parse_args():
     parse_rm(subparsers)
     parse_rmdir(subparsers)
     parse_sync(subparsers)
+    parse_tui(subparsers)
     args = parser.parse_args()
     if args.debug:
         pdbox._logger.setLevel(logging.DEBUG)
@@ -333,3 +335,12 @@ def parse_sync(subparsers):
         default=149,  # Dropbox maximum is 150 MB.
         help="chunk size in MB for splitting large uploads",
     )
+
+
+def parse_tui(subparsers):
+    """Add arguments for the tui command."""
+    ui = subparsers.add_parser(
+        "tui",
+        help="run pdbox in an interactive TUI",
+    )
+    ui.set_defaults(func=tui.run)

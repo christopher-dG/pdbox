@@ -30,10 +30,10 @@ $ python setup.py install
 ## Usage
 
 ```
-usage: pdbox [-h] [-d] {ls,cp,mv,mkdir,rm,rmdir,sync} ...
+usage: pdbox [-h] [-d] {ls,cp,mv,mkdir,rm,rmdir,sync,tui} ...
 
 positional arguments:
-  {ls,cp,mv,mkdir,rm,rmdir,sync}
+  {ls,cp,mv,mkdir,rm,rmdir,sync,tui}
     ls                  list a folder inside Dropbox
     cp                  copy a file to/from/inside Dropbox
     mv                  move a file or object inside Dropbox
@@ -41,6 +41,7 @@ positional arguments:
     rm                  delete a file or folder inside Dropbox
     rmdir               delete a folder inside Dropbox
     sync                synchronize a folder to/from/inside Dropbox
+    tui                 run pdbox in an interactive TUI
 
 optional arguments:
   -h, --help            show this help message and exit
