@@ -545,13 +545,13 @@ class LocalFolder(object):
     def contents(self, args):
         """Get this folder's contents locally."""
         entries = []
-        for entry in os.walk(self.path):
-            entries.extend(  # Folders.
-                LocalFolder(os.path.join(entry[0], f), args) for f in entry[1],
-            )
-            entries.extend(  # Files.
-                LocalFile(os.path.join(entry[0], f), args) for f in entry[2],
-            )
+        walk = next(os.walk(self.path))
+        entries.extend(  # Folders.
+            LocalFolder(os.path.join(walk[0], f), args) for f in walk[1],
+        )
+        entries.extend(  # Files.
+            LocalFile(os.path.join(walk[0], f), args) for f in walk[2],
+        )
         return entries
 
     def upload(self, dest, args, overwrite=False):
