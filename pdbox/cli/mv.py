@@ -38,7 +38,7 @@ def mv_inside(args):
     """Move a file or directory inside Dropbox."""
     try:
         remote_src = get_remote(args.src, args)
-    except (ValueError, TypeError) as e:  # No file, nothing to move.
+    except (ValueError, TypeError):  # No file, nothing to move.
         fail("%s couldn't be found" % dbx_uri(args.src), args)
     else:  # Something exists to be downloaded.
         if isinstance(remote_src, RemoteFolder) and not args.recursive:
@@ -49,7 +49,7 @@ def mv_inside(args):
 
     try:
         remote_dest = get_remote(args.dst, args)
-    except (ValueError, TypeError) as e:  # Nothing found at the destination.
+    except (ValueError, TypeError):  # Nothing found at the destination.
         delete = False  # TypeError may cause problems, but ignore it for now.
     else:
         if isinstance(remote_dest, RemoteFolder):
@@ -118,7 +118,7 @@ def mv_to(args):
     """Move a file to Dropbox."""
     try:
         local = get_local(args.src, args)
-    except ValueError as e:
+    except ValueError:
         fail("%s could not be found" % os.path.abspath(args.src), args)
 
     if local.islink and not args.follow_symlinks:

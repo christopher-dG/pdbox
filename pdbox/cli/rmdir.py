@@ -13,7 +13,7 @@ def rmdir(args):
     """
     try:
         remote = get_remote(args.path, args)
-    except (ValueError, TypeError) as e:
+    except (ValueError, TypeError):
         fail("%s was not found" % dbx_uri(args.path), args)
 
     if not isinstance(remote, RemoteFolder):

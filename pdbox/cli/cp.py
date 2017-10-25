@@ -37,7 +37,7 @@ def cp_inside(args):
     """Copy a file inside Dropbox."""
     try:
         remote_src = get_remote(args.src, args)
-    except (ValueError, TypeError) as e:
+    except (ValueError, TypeError):
         fail("%s was not found" % dbx_uri(args.src), args)
 
     if not isinstance(remote_src, RemoteFile):
@@ -88,7 +88,7 @@ def cp_from(args):
 
     try:
         local = get_local(args.dst, args)
-    except ValueError as e:
+    except ValueError:
         delete = False
     else:  # Something exists here.
         if isinstance(local, LocalFolder):
@@ -100,7 +100,7 @@ def cp_from(args):
 
     try:
         remote.download(args.dst, args, overwrite=delete)
-    except DropboxError as e:
+    except DropboxError:
         fail("Couldn't download %s" % remote.uri, args)
 
 
@@ -108,7 +108,7 @@ def cp_to(args):
     """Copy a file to Dropbox."""
     try:
         local = get_local(args.src, args)
-    except ValueError as e:
+    except ValueError:
         fail("%s does not exist" % args.src, args)
 
     if isinstance(local, LocalFolder):

@@ -166,7 +166,7 @@ class WorkingDirectory:
         """Reload the contents of this directory."""
         try:
             self.contents = self.folder.contents(args)
-        except:
+        except Exception:
             self.contents = None
             self.length = 0
         else:

@@ -15,7 +15,7 @@ def get_token(args):
         with open(pdbox.TOKEN_PATH) as f:
             pdbox.debug("Using token from file", args)
             token = f.read()
-    except:  # File probably doesn't exist, so get a new token.
+    except Exception:  # File probably doesn't exist, so get a new token.
         pdbox.debug("Generating new token", args)
         try:
             token = auth_flow(args)

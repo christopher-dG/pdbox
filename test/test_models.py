@@ -45,5 +45,4 @@ def test_local_folder():
         os.path.join(tempdir, "a"),
         os.path.join(tempdir, "b"),
         os.path.join(tempdir, "c"),
-        os.path.join(tempdir, "c", "d"),
     ])

@@ -350,7 +350,7 @@ class RemoteFolder(RemoteObject):
                     os.path.join(tmp_dest, entry.name),
                     args,
                 )
-            except:
+            except Exception:
                 pdbox.error("%s could not be downloaded" % self.uri, args)
 
         if not args.dryrun:

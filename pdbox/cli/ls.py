@@ -9,7 +9,7 @@ def ls(args):
     """List a directory inside Dropbox."""
     try:
         folder = get_remote(args.path, args)
-    except (ValueError, TypeError) as e:  # The path probably doesn't exist.
+    except (ValueError, TypeError):  # The path probably doesn't exist.
         folder = None
 
     if not isinstance(folder, RemoteFolder):
