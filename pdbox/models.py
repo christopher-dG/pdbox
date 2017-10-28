@@ -176,6 +176,7 @@ class RemoteFile(RemoteObject):
         self.id = meta.id  # File ID, not sure how this can be used.
         self.size = meta.size  # Size in bytes.
         self.path = meta.path_display  # Path, including the name.
+        self.parent = "/".join(self.path.split("/")[:-1])  # Parent folder.
         self.name = meta.name  # File name with extension.
         self.modified = meta.server_modified  # Last modified time.
         self.rev = meta.rev  # Revision, not sure how this can be used.
@@ -251,6 +252,7 @@ class RemoteFolder(RemoteObject):
                 # get_metadata on the root folder is not supported.
                 self.id = -1
                 self.path = "/"
+                self.parent = "/"
                 self.name = "/"
                 self.uri = "dbx://"
                 return
@@ -266,6 +268,7 @@ class RemoteFolder(RemoteObject):
 
         self.id = meta.id  # Folder ID, not sure how this can be used.
         self.path = meta.path_display  # Path to the folder, including name.
+        self.parent = "/".join(self.path.split("/")[:-1])  # Parent folder.
         self.name = meta.name  # Base name of the folder.
         self.uri = dbx_uri(self.path)  # Convenience field for display.
 
@@ -398,6 +401,7 @@ class LocalFile(object):
             raise ValueError("%s is a folder" % path)
 
         self.path = path  # Path the the file, including name.
+        self.parent = os.path.dirname(self.path)  # Parent folder.
         self.name = os.path.basename(self.path)  # File name with extension.
         self.islink = os.path.islink(self.path)  # If the file is a symlink.
         self.size = os.path.getsize(self.path)  # Size in bytes.
@@ -516,6 +520,7 @@ class LocalFolder(object):
             raise ValueError("%s is a file" % path)
 
         self.path = path  # Path to the folder, including name.
+        self.parent = os.path.dirname(self.path)  # Parent folder.
         self.name = os.path.basename(self.path)  # Base name of the folder..
         self.islink = os.path.islink(self.path)  # If the path is a symlink.
         self.parent = os.path.dirname(self.path)  # Parent folder.
