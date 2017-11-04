@@ -58,8 +58,10 @@ def cp_inside(args):
             args.dst = "%s/%s" % (remote_dest.path, remote_src.name)
             cp_inside(args)
             return
-        overwrite(remote_dest.uri, args) or fail("Cancelled", args)
-        delete = True
+        else:
+            # Overwrite the existing file.
+            overwrite(remote_dest.uri, args) or fail("Cancelled", args)
+            delete = True
 
     try:
         remote_src.copy(args.dst, args, overwrite=delete)
@@ -95,8 +97,10 @@ def cp_from(args):
             args.dst = os.path.join(local.path, remote.name)
             cp_from(args)
             return
-        overwrite(local.path, args) or fail("Cancelled", args)
-        delete = True
+        else:
+            # Overwrite the existing file.
+            overwrite(local.path, args) or fail("Cancelled", args)
+            delete = True
 
     try:
         remote.download(args.dst, args, overwrite=delete)
@@ -129,6 +133,7 @@ def cp_to(args):
             cp_to(args)
             return
         else:
+            # Overwrite the existing file.
             overwrite(remote.uri, args) or fail("Cancelled", args)
             delete = True
 

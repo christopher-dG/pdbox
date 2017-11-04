@@ -57,9 +57,10 @@ def mv_inside(args):
             args.dst = "%s/%s" % (remote_dest.path, remote_src.name)
             mv_inside(args)
             return
-        # Overwrite the existing file.
-        overwrite(remote_dest.uri, args) or fail("Cancelled", args)
-        delete = True
+        else:
+            # Overwrite the existing file.
+            overwrite(remote_dest.uri, args) or fail("Cancelled", args)
+            delete = True
 
     # Now that the path is clear, we can move the file.
     try:
@@ -92,9 +93,10 @@ def mv_from(args):
             args.dst = os.path.join(local.path, remote.name)
             mv_from(args)
             return
-        # Overwrite the existing file.
-        overwrite(local.path, args) or fail("Cancelled", args)
-        delete = True
+        else:
+            # Overwrite the existing file.
+            overwrite(local.path, args) or fail("Cancelled", args)
+            delete = True
 
     try:
         remote.download(args.dst, args, overwrite=delete)
@@ -133,7 +135,7 @@ def mv_to(args):
     try:
         remote = get_remote(args.dst, args)
     except ValueError:  # Remote file probably doesn't exist.
-        pass
+        delete = False
     except TypeError:
         fail(
             "Something exists at %s that can't be overwritten" %
@@ -141,10 +143,18 @@ def mv_to(args):
             args,
         )
     else:
-        overwrite(remote.uri, args) or fail("Cancelled", args)
+        if isinstance(remote, RemoteFolder):
+            # Place the file inside the folder.
+            args.dst = "%s/%s" % (remote.path, local.name)
+            mv_to(args)
+            return
+        else:
+            # Overwrite the existing file.
+            overwrite(remote.uri, args) or fail("Cancelled", args)
+            delete = True
 
     try:
-        local.upload(args.dst, args)
+        local.upload(args.dst, args, overwrite=delete)
     except DropboxError:
         fail("Uploading %s to %s failed" % (dbx_uri(args.src), args.dst), args)
 
