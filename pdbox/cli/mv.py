@@ -19,7 +19,7 @@ def mv(args):
     - recursive (bool)
     - chunksize (float)
     """
-    if len(args.src) > 1 and not pdbox.cli.assert_is_folder(args.dst):
+    if len(args.src) > 1 and not pdbox.cli.assert_is_folder(args.dst, args):
         pdbox.error(
             "%s is not a folder; can't move multiple items here" % args.dst,
             args,
@@ -72,7 +72,7 @@ def mv_inside(src, args):
         delete = False
     else:
         if isinstance(remote_dest, RemoteFolder):
-            # Move the source into the folder.
+            # Place the source inside the folder.
             args.dst = "%s/%s" % (remote_dest.path, remote_src.name)
             return mv_inside(src, args)
         else:
@@ -118,7 +118,7 @@ def mv_from(src, args):
         delete = False
     else:  # Something exists here.
         if isinstance(local, LocalFolder):
-            # Move the file inside the folder.
+            # Place the source inside the folder.
             args.dst = os.path.join(local.path, remote.name)
             return mv_from(src, args)
         else:
@@ -180,7 +180,7 @@ def mv_to(src, args):
         delete = False
     else:
         if isinstance(remote, RemoteFolder):
-            # Place the file inside the folder.
+            # Place the source inside the folder.
             args.dst = "%s/%s" % (remote.path, local.name)
             return mv_to(src, args)
         else:

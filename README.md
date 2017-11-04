@@ -30,17 +30,16 @@ $ python setup.py install
 ## Usage
 
 ```
-usage: pdbox [-h] [-d] {ls,cp,mv,mkdir,rm,rmdir,sync,tui} ...
+usage: pdbox [-h] [-d] {ls,cp,mv,mkdir,rm,rmdir,tui} ...
 
 positional arguments:
-  {ls,cp,mv,mkdir,rm,rmdir,sync,tui}
+  {ls,cp,mv,mkdir,rm,rmdir,tui}
     ls                  list folders
     cp                  copy files
     mv                  move files or folders
     mkdir               create folders
     rm                  delete files or folders
     rmdir               delete folders
-    sync                synchronize a folder
     tui                 run pdbox in an interactive TUI
 
 optional arguments:
@@ -70,5 +69,5 @@ may affect you, in which case I recommend that you use Python 3.
 ## TODO
 
 * Much better test coverage
-* Folder sync command
+* A smart folder sync command
 * A TUI (finally something you don't get with dbxcli!)

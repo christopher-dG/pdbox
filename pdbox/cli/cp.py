@@ -18,7 +18,7 @@ def cp(args):
     - only_show_errors (bool)
     - chunksize (float)
     """
-    if len(args.src) > 1 and not pdbox.cli.assert_is_folder(args.dst):
+    if len(args.src) > 1 and not pdbox.cli.assert_is_folder(args.dst, args):
         pdbox.error(
             "%s is not a folder; can't move multiple items here" % args.dst,
             args,
@@ -58,9 +58,9 @@ def cp_inside(src, args):
         pdbox.error("%s was not found" % dbx_uri(src), args)
         return False
 
-    if not isinstance(remote_src, RemoteFile):
+    if not isinstance(remote_src, RemoteFile) and not args.recursive:
         pdbox.error(
-            "%s is a folder, use sync to copy folders" % remote_src.uri,
+            "%s is a folder and --recursive is not set" % remote_src.uri,
             args,
         )
         return False
@@ -71,7 +71,7 @@ def cp_inside(src, args):
         delete = False
     else:  # Something exists here.
         if not isinstance(remote_dest, RemoteFile):
-            # Place the file inside the folder.
+            # Place the source inside the folder.
             args.dst = "%s/%s" % (remote_dest.path, remote_src.name)
             return cp_inside(src, args)
         else:
@@ -103,10 +103,9 @@ def cp_from(src, args):
         pdbox.debug(e, args)
         pdbox.error("Couldn't find %s" % dbx_uri(src), args)
 
-    if not isinstance(remote, RemoteFile):
+    if not isinstance(remote, RemoteFile) and not args.recursive:
         pdbox.error(
-            "%s is not a file, use sync to download folders" %
-            remote.uri,
+            "%s is a folder and --recursive is not set" % remote.uri,
             args,
         )
         return False
@@ -117,6 +116,7 @@ def cp_from(src, args):
         delete = False
     else:  # Something exists here.
         if isinstance(local, LocalFolder):
+            # Place the source inside the folder.
             args.dst = os.path.join(local.path, remote.name)
             return cp_from(src, args)
         else:
@@ -144,9 +144,9 @@ def cp_to(src, args):
         pdbox.error("%s does not exist" % args.src, args)
         return False
 
-    if isinstance(local, LocalFolder):
+    if isinstance(local, LocalFolder) and not args.recursive:
         pdbox.error(
-            "%s is a folder, use sync to upload folders" % local.path,
+            "%s is a folder and --recursive is not set" % local.path,
             args,
         )
         return False
@@ -162,7 +162,7 @@ def cp_to(src, args):
         delete = False
     else:
         if not isinstance(remote, RemoteFile):
-            # Place the file inside the folder.
+            # Place the source inside the folder.
             args.dst = "%s/%s" % (remote.path, local.name)
             return cp_to(src, args)
         else:

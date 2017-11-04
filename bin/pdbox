@@ -8,7 +8,12 @@ if __name__ == "__main__":
     args = pdbox.parsing.parse_args()
     pdbox.debug("Args: %s" % args, args)
     pdbox.auth.login(pdbox.auth.get_token(args))
-    retval = args.func(args)
+    try:
+        retval = args.func(args)
+    except KeyboardInterrupt:
+        print("")
+        pdbox.error("Interrupted")
+        retval = False
     try:
         if args.dryrun:
             pdbox.info("--dryrun is set: no operations were performed")

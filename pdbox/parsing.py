@@ -22,7 +22,6 @@ def parse_args():
     parse_mkdir(subparsers)
     parse_rm(subparsers)
     parse_rmdir(subparsers)
-    parse_sync(subparsers)
     parse_tui(subparsers)
     args = parser.parse_args()
     if args.debug:
@@ -78,6 +77,12 @@ def parse_cp(subparsers):
         "--only-show-errors",
         action="store_true",
         help="only display errors and warnings",
+    )
+    cp.add_argument(
+        "-r",
+        "--recursive",
+        action="store_true",
+        help="perform operations on all files under the specified folder(s)",
     )
     cp.add_argument(
         "-c",
@@ -276,69 +281,6 @@ def parse_rm(subparsers):
         "--only-show-errors",
         action="store_true",
         help="only display errors and warnings",
-    )
-
-
-def parse_sync(subparsers):
-    """Add arguments for the sync command."""
-    sync = subparsers.add_parser(
-        "sync",
-        help="synchronize a folder",
-    )
-    sync.set_defaults(func=cli.sync)
-    sync.add_argument(
-        "src",
-        metavar="<source>",
-        help="folder to sync",
-    )
-    sync.add_argument(
-        "dst",
-        metavar="<destination>",
-        help="destination folder",
-    )
-    sync.add_argument(
-        "--dryrun",
-        action="store_true",
-        help="display operations without performing them",
-    )
-    sync.add_argument(
-        "-q",
-        "--quiet",
-        action="store_true",
-        help="don't display operations",
-    )
-    # TODO: --include
-    # TODO: --exclude
-    symlinks = sync.add_mutually_exclusive_group()
-    symlinks.add_argument(
-        "--follow-symlinks",
-        dest="follow_symlinks",
-        action="store_true",
-        help="follow symbolic links on the local filesystem",
-    )
-    symlinks.add_argument(
-        "--no-follow-symlinks",
-        dest="follow_symlinks",
-        action="store_false",
-        help="don't follow symbolic links on the local filesystem",
-    )
-    sync.add_argument(
-        "--only-show-errors",
-        action="store_true",
-        help="only display errors and warnings",
-    )
-    sync.add_argument(
-        "--delete",
-        action="store_true",
-        help="delete files present in <destination> but not <source>",
-    )
-    sync.add_argument(
-        "-c",
-        "--chunksize",
-        type=float,
-        nargs="?",
-        default=149,  # Dropbox maximum is 150 MB.
-        help="chunk size in MB for splitting large uploads",
     )
 
 
