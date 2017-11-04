@@ -1,33 +1,44 @@
 import pdbox
 
 from pdbox.models import get_remote, RemoteFolder
-from pdbox.utils import DropboxError, fail, isize, dbx_uri
+from pdbox.utils import DropboxError, isize, dbx_uri
 from tabulate import tabulate
 
 
 def ls(args):
-    """List a directory inside Dropbox."""
-    try:
-        folder = get_remote(args.path, args)
-    except (ValueError, TypeError):  # The path probably doesn't exist.
-        folder = None
+    """List one or more directories inside Dropbox."""
+    success = True
 
-    if not isinstance(folder, RemoteFolder):
-        fail("%s is not a folder" % dbx_uri(args.path), args)
+    for path in args.path:
+        try:
+            folder = get_remote(path, args)
+        except (ValueError, TypeError):  # The path probably doesn't exist.
+            folder = None
 
-    entries = folder.contents(args)
+        if not isinstance(folder, RemoteFolder):
+            pdbox.error("%s is not a folder" % dbx_uri(path), args)
+            success = False
+            continue
 
-    if not entries:
-        print("%s: no files or folders" % folder.uri)
-    else:
-        display(folder, entries, args)
+        try:
+            entries = folder.contents(args)
+        except DropboxError:
+            pdbox.error("%s could not be displayed" % folder.uri, args)
+            success = False
+        else:
+            if not entries:
+                print("%s: no files or folders" % folder.uri)
+            else:
+                success &= display(folder, entries, args)
+
+    return success
 
 
 def display(folder, entries, args, depth=1):
     """Given a list of folders and files, print them as a table."""
     if not entries:
         print("%s: no files or folders\n" % folder.uri)
-        return
+        return True
 
     rows = [[folder.uri, "size", "modified (UTC)"]]
     nfiles = 0
@@ -55,6 +66,7 @@ def display(folder, entries, args, depth=1):
         )
 
     print("")
+    success = True
 
     if args.recursive and (args.maxdepth == -1 or depth < args.maxdepth):
         for e in filter(lambda e: isinstance(e, RemoteFolder), entries):
@@ -62,5 +74,8 @@ def display(folder, entries, args, depth=1):
                 contents = e.contents(args)
             except DropboxError:
                 pdbox.warn("%s could not be displayed" % e.uri, args)
+                success = False
             else:
-                display(e, contents, args, depth=depth + 1)
+                success &= display(e, contents, args, depth=depth + 1)
+
+    return success

@@ -34,13 +34,14 @@ def parse_cp(subparsers):
     """Add arguments for the cp command."""
     cp = subparsers.add_parser(
         "cp",
-        help="copy a file to/from/inside Dropbox",
+        help="copy one or more files to/from/inside Dropbox",
     )
     cp.set_defaults(func=cli.cp, follow_symlinks=True)
     cp.add_argument(
         "src",
-        metavar="<source>",
-        help="file or folder to copy",
+        metavar="<source ...>",
+        nargs="+",
+        help="file(s) or folder(s) to copy",
     )
     cp.add_argument(
         "dst",
@@ -92,21 +93,21 @@ def parse_ls(subparsers):
     """Add arguments for the ls command."""
     ls = subparsers.add_parser(
         "ls",
-        help="list a folder inside Dropbox",
+        help="list one or more folders inside Dropbox",
     )
     ls.set_defaults(func=cli.ls)
     ls.add_argument(
         "path",
-        metavar="<path>",
-        nargs="?",
-        default="",
-        help="folder to list (leave empty to list root folder)",
+        metavar="<path ...>",
+        nargs="*",
+        default=[""],
+        help="folder(s) to list (leave empty to list root folder)",
     )
     ls.add_argument(
         "-r",
         "--recursive",
         action="store_true",
-        help="perform operations on all files under the specified folder",
+        help="perform operations on all files under the specified folder(s)",
     )
     ls.add_argument(
         "--maxdepth",
@@ -131,13 +132,14 @@ def parse_mkdir(subparsers):
     """Add arguments for the mkdir command."""
     mkdir = subparsers.add_parser(
         "mkdir",
-        help="create a new folder inside Dropbox",
+        help="create one or more new folders inside Dropbox",
     )
     mkdir.set_defaults(func=cli.mkdir)
     mkdir.add_argument(
         "path",
-        metavar="<path>",
-        help="path to the new folder",
+        metavar="<path ...>",
+        nargs="+",
+        help="path(s) to the new folder(s)",
     )
     mkdir.add_argument(
         "--dryrun",
@@ -150,13 +152,14 @@ def parse_mv(subparsers):
     """Add arguments for the mv command."""
     mv = subparsers.add_parser(
         "mv",
-        help="move a file or object inside Dropbox",
+        help="move one or more files or folders to/from/inside Dropbox",
     )
     mv.set_defaults(func=cli.mv)
     mv.add_argument(
         "src",
-        metavar="<source>",
-        help="file or folder to move",
+        metavar="<source ...>",
+        nargs="+",
+        help="file(s) or folder(s) to move",
     )
     mv.add_argument(
         "dst",
@@ -198,7 +201,7 @@ def parse_mv(subparsers):
         "-r",
         "--recursive",
         action="store_true",
-        help="perform operations on all files under the specified folder",
+        help="perform operations on all files under the specified folder(s)",
     )
     mv.add_argument(
         "-c",
@@ -214,13 +217,14 @@ def parse_rmdir(subparsers):
     """Add arguments for the rmdir command."""
     rmdir = subparsers.add_parser(
         "rmdir",
-        help="delete a folder inside Dropbox",
+        help="delete one or more folders inside Dropbox",
     )
     rmdir.set_defaults(func=cli.rmdir)
     rmdir.add_argument(
         "path",
-        metavar="<folder>",
-        help="folder to remove",
+        metavar="<folder ...>",
+        nargs="+",
+        help="folder(s) to remove",
     )
     rmdir.add_argument(
         "--dryrun",
@@ -240,13 +244,14 @@ def parse_rm(subparsers):
     """Add arguments for the rm command."""
     rm = subparsers.add_parser(
         "rm",
-        help="delete a file or folder inside Dropbox",
+        help="delete one or more files or folders inside Dropbox",
     )
     rm.set_defaults(func=cli.rm)
     rm.add_argument(
         "path",
-        metavar="<path>",
-        help="path to remove",
+        metavar="<path ...>",
+        nargs="+",
+        help="path(s) to remove",
     )
     rm.add_argument(
         "--dryrun",
@@ -263,7 +268,7 @@ def parse_rm(subparsers):
         "-r",
         "--recursive",
         action="store_true",
-        help="perform operations on all files under the specified folder",
+        help="perform operations on all files under the specified folder(s)",
     )
     # TODO: --include
     # TODO: --exclude
@@ -284,12 +289,12 @@ def parse_sync(subparsers):
     sync.add_argument(
         "src",
         metavar="<source>",
-        help="file or folder to copy",
+        help="folder to sync",
     )
     sync.add_argument(
         "dst",
         metavar="<destination>",
-        help="destination file or folder",
+        help="destination folder",
     )
     sync.add_argument(
         "--dryrun",

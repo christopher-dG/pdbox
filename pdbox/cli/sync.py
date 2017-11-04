@@ -1,4 +1,4 @@
-from pdbox.utils import fail
+import pdbox
 
 
 def sync(args):
@@ -14,31 +14,32 @@ def sync(args):
     - only_show_errors (bool)
     - delete (bool)
     """
-    if not args.src.startswith("dbx://") and not args.dst.startswith("dbx://"):
-        fail(
+    if not pdbox.cli.validate_src_dest(args.src, args.dst):
+        pdbox.error(
             "At least one of <source> or <destination> must be a Dropbox path "
             "with the prefix 'dbx://'",
             args
         )
+        return False
 
     if args.src.startswith("dbx://") and args.dst.startswith("dbx://"):
-        sync_inside(args)
+        return sync_inside(args)
     elif args.src.startswith("dbx://"):
-        sync_from(args)
+        return sync_from(args)
     else:
-        sync_to(args)
+        return sync_to(args)
 
 
 def sync_inside(args):
     """Synchronize directories inside Dropbox."""
-    pass  # TODO
+    return False  # TODO
 
 
 def sync_from(args):
     """Synchronize a directory from Dropbox."""
-    pass  # TODO
+    return False  # TODO
 
 
 def sync_to(args):
     """Synchronize a directory to Dropbox."""
-    pass  # TODO
+    return False  # TODO

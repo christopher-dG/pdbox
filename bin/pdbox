@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 
 import pdbox
+import sys
 
 
 if __name__ == "__main__":
     args = pdbox.parsing.parse_args()
     pdbox.debug("Args: %s" % args, args)
     pdbox.auth.login(pdbox.auth.get_token(args))
-    args.func(args)
+    retval = args.func(args)
     try:
         if args.dryrun:
             pdbox.info("--dryrun is set: no operations were performed")
     except AttributeError:
         pass
+    sys.exit(not retval)

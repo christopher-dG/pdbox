@@ -2,12 +2,12 @@ import os
 import pdbox
 
 from pdbox.models import get_local, get_remote, RemoteFolder, LocalFolder
-from pdbox.utils import DropboxError, dbx_uri, fail, overwrite
+from pdbox.utils import DropboxError, dbx_uri, overwrite
 
 
 def mv(args):
     """
-    Move a file or directory to/from/inside Dropbox.
+    Move one or  files or directories to/from/inside Dropbox.
 
     args fields:
     - src (string)
@@ -19,33 +19,52 @@ def mv(args):
     - recursive (bool)
     - chunksize (float)
     """
-    if not args.src.startswith("dbx://") and not args.dst.startswith("dbx://"):
-        fail(
-            "At least one of <source> or <destination> must be a Dropbox path "
-            "with the prefix 'dbx://'",
-            args
+    if len(args.src) > 1 and not pdbox.cli.assert_is_folder(args.dst):
+        pdbox.error(
+            "%s is not a folder; can't move multiple items here" % args.dst,
+            args,
         )
+        return False
 
-    if args.src.startswith("dbx://") and args.dst.startswith("dbx://"):
-        mv_inside(args)
-    elif args.src.startswith("dbx://"):
-        mv_from(args)
-    else:
-        mv_to(args)
+    dest = args.dst
+    success = True
+
+    for src in args.src:
+        if not pdbox.cli.validate_src_dest(src, args.dst):
+            pdbox.error(
+                "At least one of <source> or <destination> must be a Dropbox "
+                "path with the prefix 'dbx://'",
+                args,
+            )
+            success = False
+            continue
+
+        if src.startswith("dbx://") and args.dst.startswith("dbx://"):
+            success &= mv_inside(src, args)
+        elif src.startswith("dbx://"):
+            success &= mv_from(src, args)
+        else:
+            success &= mv_to(src, args)
+
+        args.dst = dest  # The inner functions may have changed this.
+
+    return success
 
 
-def mv_inside(args):
+def mv_inside(src, args):
     """Move a file or directory inside Dropbox."""
     try:
-        remote_src = get_remote(args.src, args)
+        remote_src = get_remote(src, args)
     except (ValueError, TypeError):  # No file, nothing to move.
-        fail("%s couldn't be found" % dbx_uri(args.src), args)
+        pdbox.error("%s couldn't be found" % dbx_uri(src), args)
+        return False
     else:  # Something exists to be downloaded.
         if isinstance(remote_src, RemoteFolder) and not args.recursive:
-            fail(
+            pdbox.error(
                 "%s is a folder and --recursive is not set" % remote_src.uri,
                 args,
             )
+            return False
 
     try:
         remote_dest = get_remote(args.dst, args)
@@ -55,33 +74,43 @@ def mv_inside(args):
         if isinstance(remote_dest, RemoteFolder):
             # Move the source into the folder.
             args.dst = "%s/%s" % (remote_dest.path, remote_src.name)
-            mv_inside(args)
-            return
+            return mv_inside(src, args)
         else:
             # Overwrite the existing file.
-            overwrite(remote_dest.uri, args) or fail("Cancelled", args)
-            delete = True
+            if not overwrite(remote_dest.uri, args):
+                pdbox.error("Cancelled", args)
+                return False
+            else:
+                delete = True
 
     # Now that the path is clear, we can move the file.
     try:
         remote_src.move(args.dst, args, overwrite=delete)
     except DropboxError:
-        fail(
+        pdbox.error(
             "%s could not be moved to %s" %
             (remote_src.uri, dbx_uri(args.dst)),
             args,
         )
+        return False
+    else:
+        return True
 
 
-def mv_from(args):
+def mv_from(src, args):
     """Move a file from Dropbox."""
     try:
-        remote = get_remote(args.src, args)
+        remote = get_remote(src, args)
     except (ValueError, TypeError):  # No file, can't download anything.
-        fail("%s could not be found" % dbx_uri(args.src), args)
+        pdbox.error("%s could not be found" % dbx_uri(src), args)
+        return False
 
     if isinstance(remote, RemoteFolder) and not args.recursive:
-        fail("%s is a folder and --recursive is not set" % remote.uri, args)
+        pdbox.error(
+            "%s is a folder and --recursive is not set" % remote.uri,
+            args,
+        )
+        return False
 
     try:
         local = get_local(args.dst, args)
@@ -91,75 +120,95 @@ def mv_from(args):
         if isinstance(local, LocalFolder):
             # Move the file inside the folder.
             args.dst = os.path.join(local.path, remote.name)
-            mv_from(args)
-            return
+            return mv_from(src, args)
         else:
             # Overwrite the existing file.
-            overwrite(local.path, args) or fail("Cancelled", args)
-            delete = True
+            if not overwrite(local.path, args):
+                pdbox.error("Cancelled", args)
+                return False
+            else:
+                delete = True
 
     try:
         remote.download(args.dst, args, overwrite=delete)
     except DropboxError:
-        fail("Couldn't download %s" % remote.dbx_uri(), args)
+        pdbox.error("Couldn't download %s" % remote.uri, args)
+        return False
     except Exception as e:  # Some other exception, probably FS related.
         pdbox.debug(e, args)
-        fail(
+        pdbox.error(
             "Something went wrong, check %s for your download" %
             pdbox.TMP_DOWNLOAD_DIR,
             args,
         )
+        return False
 
     try:
         remote.delete(args)
     except DropboxError:
-        fail("%s couldn't be deleted" % remote.uri, args)
+        pdbox.error("%s couldn't be deleted" % remote.uri, args)
+        return False
+    else:
+        return True
 
 
-def mv_to(args):
+def mv_to(src, args):
     """Move a file to Dropbox."""
     try:
-        local = get_local(args.src, args)
+        local = get_local(src, args)
     except ValueError:
-        fail("%s could not be found" % os.path.abspath(args.src), args)
+        pdbox.error("%s could not be found" % os.path.abspath(src), args)
+        return False
 
     if local.islink and not args.follow_symlinks:
-        fail(
+        pdbox.error(
             "%s is a symlink and --no-follow-symlinks is set" %
-            os.path.abspth(args.src),
+            os.path.abspth(src),
             args,
         )
+        return False
     if isinstance(local, LocalFolder) and not args.recursive:
-        fail("%s is a folder and --recursive is not set" % local.path, args)
+        pdbox.error(
+            "%s is a folder and --recursive is not set" % local.path,
+            args,
+        )
+        return False
 
     try:
         remote = get_remote(args.dst, args)
     except ValueError:  # Remote file probably doesn't exist.
         delete = False
     except TypeError:
-        fail(
+        pdbox.error(
             "Something exists at %s that can't be overwritten" %
             dbx_uri(args.dst),
             args,
         )
+        return False
     else:
         if isinstance(remote, RemoteFolder):
             # Place the file inside the folder.
             args.dst = "%s/%s" % (remote.path, local.name)
-            mv_to(args)
-            return
+            return mv_to(src, args)
         else:
             # Overwrite the existing file.
-            overwrite(remote.uri, args) or fail("Cancelled", args)
-            delete = True
+            if not overwrite(remote.uri, args):
+                pdbox.error("Cancelled", args)
+                return False
+            else:
+                delete = True
 
     try:
         local.upload(args.dst, args, overwrite=delete)
     except DropboxError:
-        fail("Uploading %s to %s failed" % (dbx_uri(args.src), args.dst), args)
+        pdbox.error("Uploading %s to %s failed" % (local.path, args.dst), args)
+        return False
 
     try:
         local.delete(args)
     except Exception as e:
         pdbox.debug(e, args)
-        fail("%s could not be deleted" % local.path, args)
+        pdbox.error("%s could not be deleted" % local.path, args)
+        return False
+    else:
+        return True
