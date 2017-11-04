@@ -17,7 +17,7 @@ def mkdir(args):
     for path in args.path:
         try:
             remote = get_remote(path)
-        except (ValueError, TypeError):  # Nothing exists here, no problem.
+        except ValueError:  # Nothing exists here, no problem.
             pass
         else:
             pdbox.error("%s already exists" % remote.uri, args)

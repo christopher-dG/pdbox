@@ -54,7 +54,7 @@ def cp_inside(src, args):
     """Copy a file inside Dropbox."""
     try:
         remote_src = get_remote(src, args)
-    except (ValueError, TypeError):
+    except ValueError:
         pdbox.error("%s was not found" % dbx_uri(src), args)
         return False
 
@@ -69,13 +69,6 @@ def cp_inside(src, args):
         remote_dest = get_remote(args.dst, args)
     except ValueError:
         delete = False
-    except TypeError:
-        pdbox.error(
-            "Something exists at %s that can't be overwritten" %
-            dbx_uri(args.dst),
-            args,
-        )
-        return False
     else:  # Something exists here.
         if not isinstance(remote_dest, RemoteFile):
             # Place the file inside the folder.
@@ -106,7 +99,7 @@ def cp_from(src, args):
     """Copy a file from Dropbox."""
     try:
         remote = get_remote(src, args)
-    except (ValueError, TypeError) as e:
+    except ValueError as e:
         pdbox.debug(e, args)
         pdbox.error("Couldn't find %s" % dbx_uri(src), args)
 
@@ -167,8 +160,6 @@ def cp_to(src, args):
         remote = get_remote(args.dst, args)
     except ValueError:  # Remote file probably doesn't exist.
         delete = False
-    except TypeError:
-        pdbox.error("Something exists at %s" % dbx_uri(args.dst), args)
     else:
         if not isinstance(remote, RemoteFile):
             # Place the file inside the folder.

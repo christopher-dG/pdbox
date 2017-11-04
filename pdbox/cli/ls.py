@@ -12,7 +12,7 @@ def ls(args):
     for path in args.path:
         try:
             folder = get_remote(path, args)
-        except (ValueError, TypeError):  # The path probably doesn't exist.
+        except ValueError:  # The path probably doesn't exist.
             folder = None
 
         if not isinstance(folder, RemoteFolder):

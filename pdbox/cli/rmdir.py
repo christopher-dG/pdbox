@@ -18,7 +18,7 @@ def rmdir(args):
     for path in args.path:
         try:
             remote = get_remote(path, args)
-        except (ValueError, TypeError):
+        except ValueError:
             pdbox.error("%s was not found" % dbx_uri(path), args)
             success = False
             continue

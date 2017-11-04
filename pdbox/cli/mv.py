@@ -55,7 +55,7 @@ def mv_inside(src, args):
     """Move a file or directory inside Dropbox."""
     try:
         remote_src = get_remote(src, args)
-    except (ValueError, TypeError):  # No file, nothing to move.
+    except ValueError:  # No file, nothing to move.
         pdbox.error("%s couldn't be found" % dbx_uri(src), args)
         return False
     else:  # Something exists to be downloaded.
@@ -68,8 +68,8 @@ def mv_inside(src, args):
 
     try:
         remote_dest = get_remote(args.dst, args)
-    except (ValueError, TypeError):  # Nothing found at the destination.
-        delete = False  # TypeError may cause problems, but ignore it for now.
+    except ValueError:  # Nothing found at the destination.
+        delete = False
     else:
         if isinstance(remote_dest, RemoteFolder):
             # Move the source into the folder.
@@ -101,7 +101,7 @@ def mv_from(src, args):
     """Move a file from Dropbox."""
     try:
         remote = get_remote(src, args)
-    except (ValueError, TypeError):  # No file, can't download anything.
+    except ValueError:  # No file, can't download anything.
         pdbox.error("%s could not be found" % dbx_uri(src), args)
         return False
 
@@ -178,13 +178,6 @@ def mv_to(src, args):
         remote = get_remote(args.dst, args)
     except ValueError:  # Remote file probably doesn't exist.
         delete = False
-    except TypeError:
-        pdbox.error(
-            "Something exists at %s that can't be overwritten" %
-            dbx_uri(args.dst),
-            args,
-        )
-        return False
     else:
         if isinstance(remote, RemoteFolder):
             # Place the file inside the folder.

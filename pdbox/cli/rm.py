@@ -19,7 +19,7 @@ def rm(args):
     for path in args.path:
         try:
             remote = get_remote(path, args)
-        except (ValueError, TypeError):
+        except ValueError:
             pdbox.error("%s could not be found" % dbx_uri(args.path), args)
             success = False
             continue
