@@ -34,7 +34,7 @@ def parse_cp(subparsers):
     """Add arguments for the cp command."""
     cp = subparsers.add_parser(
         "cp",
-        help="copy one or more files to/from/inside Dropbox",
+        help="copy files",
     )
     cp.set_defaults(func=cli.cp, follow_symlinks=True)
     cp.add_argument(
@@ -93,7 +93,7 @@ def parse_ls(subparsers):
     """Add arguments for the ls command."""
     ls = subparsers.add_parser(
         "ls",
-        help="list one or more folders inside Dropbox",
+        help="list folders",
     )
     ls.set_defaults(func=cli.ls)
     ls.add_argument(
@@ -101,7 +101,7 @@ def parse_ls(subparsers):
         metavar="<path ...>",
         nargs="*",
         default=[""],
-        help="folder(s) to list (leave empty to list root folder)",
+        help="folder(s) to list (empty lists the root folder)",
     )
     ls.add_argument(
         "-r",
@@ -132,7 +132,7 @@ def parse_mkdir(subparsers):
     """Add arguments for the mkdir command."""
     mkdir = subparsers.add_parser(
         "mkdir",
-        help="create one or more new folders inside Dropbox",
+        help="create folders",
     )
     mkdir.set_defaults(func=cli.mkdir)
     mkdir.add_argument(
@@ -152,7 +152,7 @@ def parse_mv(subparsers):
     """Add arguments for the mv command."""
     mv = subparsers.add_parser(
         "mv",
-        help="move one or more files or folders to/from/inside Dropbox",
+        help="move files or folders",
     )
     mv.set_defaults(func=cli.mv)
     mv.add_argument(
@@ -217,7 +217,7 @@ def parse_rmdir(subparsers):
     """Add arguments for the rmdir command."""
     rmdir = subparsers.add_parser(
         "rmdir",
-        help="delete one or more folders inside Dropbox",
+        help="delete folders",
     )
     rmdir.set_defaults(func=cli.rmdir)
     rmdir.add_argument(
@@ -244,7 +244,7 @@ def parse_rm(subparsers):
     """Add arguments for the rm command."""
     rm = subparsers.add_parser(
         "rm",
-        help="delete one or more files or folders inside Dropbox",
+        help="delete files or folders",
     )
     rm.set_defaults(func=cli.rm)
     rm.add_argument(
@@ -283,7 +283,7 @@ def parse_sync(subparsers):
     """Add arguments for the sync command."""
     sync = subparsers.add_parser(
         "sync",
-        help="synchronize a folder to/from/inside Dropbox",
+        help="synchronize a folder",
     )
     sync.set_defaults(func=cli.sync)
     sync.add_argument(

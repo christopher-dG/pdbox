@@ -34,21 +34,22 @@ def rmdir(args):
         if args.force:
             try:
                 remote.delete(args)
+                continue
             except DropboxError:
                 pdbox.error("%s could not be deleted" % remote.uri, args)
                 success = False
                 continue
-        else:
-            try:
-                contents = remote.contents(args)
-            except DropboxError:
-                pdbox.error(
-                    "Not deleting: couldn't get contents of %s "
-                    "and --force is not set" % remote.uri,
-                    args,
-                )
-                success = False
-                continue
+
+        try:
+            contents = remote.contents(args)
+        except DropboxError:
+            pdbox.error(
+                "Not deleting: couldn't get contents of %s "
+                "and --force is not set" % remote.uri,
+                args,
+            )
+            success = False
+            continue
         if contents:
             pdbox.error(
                 "%s is not empty and --force is not set"
@@ -57,6 +58,7 @@ def rmdir(args):
             )
             success = False
             continue
+
         try:
             remote.delete(args)
         except DropboxError:

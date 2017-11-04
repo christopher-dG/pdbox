@@ -572,7 +572,7 @@ class LocalFolder(object):
         remote_assert_empty(dest, args)
 
         remote = RemoteFolder.create(dest, args)
-        for entry in remote.contents(args):
+        for entry in self.contents(args):
             entry.upload("/".join([remote.path, entry.name]), args)
         return remote
 

@@ -24,10 +24,10 @@ def mkdir(args):
             success = False
             continue
 
-    try:
-        RemoteFolder.create(args.path, args)
-    except (ValueError, DropboxError):
-        pdbox.error("%s could not be created" % dbx_uri(path), args)
-        success = False
+        try:
+            RemoteFolder.create(path, args)
+        except (ValueError, DropboxError):
+            pdbox.error("%s could not be created" % dbx_uri(path), args)
+            success = False
 
     return success

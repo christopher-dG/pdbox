@@ -34,14 +34,13 @@ usage: pdbox [-h] [-d] {ls,cp,mv,mkdir,rm,rmdir,sync,tui} ...
 
 positional arguments:
   {ls,cp,mv,mkdir,rm,rmdir,sync,tui}
-    ls                  list one or more folders inside Dropbox
-    cp                  copy one or more files to/from/inside Dropbox
-    mv                  move one or more files or folders to/from/inside
-                        Dropbox
-    mkdir               create one or more new folders inside Dropbox
-    rm                  delete one or more files or folders inside Dropbox
-    rmdir               delete one or more folders inside Dropbox
-    sync                synchronize a folder to/from/inside Dropbox
+    ls                  list folders
+    cp                  copy files
+    mv                  move files or folders
+    mkdir               create folders
+    rm                  delete files or folders
+    rmdir               delete folders
+    sync                synchronize a folder
     tui                 run pdbox in an interactive TUI
 
 optional arguments:
