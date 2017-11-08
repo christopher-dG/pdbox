@@ -6,16 +6,16 @@ def validate_src_dest(src, dest):
     return src.startswith("dbx://") or dest.startswith("dbx://")
 
 
-def assert_is_folder(path, **kwargs):
+def assert_is_folder(path):
     """Check that a given path points to a folder."""
     if path.startswith("dbx://"):
         try:
-            RemoteFolder(path, **kwargs)
+            RemoteFolder(path)
         except ValueError:
             return False
     else:
         try:
-            LocalFolder(path, **kwargs)
+            LocalFolder(path)
         except ValueError:
             return False
     return True

@@ -5,12 +5,11 @@ import sys
 
 
 if __name__ == "__main__":
-    args = pdbox.parsing.parse_args()
-    kwargs = vars(args)
-    pdbox.debug("Args: %s" % args, **kwargs)
-    pdbox.auth.login(pdbox.auth.get_token(**kwargs))
+    kwargs = vars(pdbox.parsing.parse_args())
+    pdbox.debug("Args: %s" % kwargs)
+    pdbox.init(**kwargs)
     try:
-        retval = args.func(**kwargs)
+        retval = kwargs["func"]()
     except KeyboardInterrupt:
         print("")
         pdbox.error("Interrupted")

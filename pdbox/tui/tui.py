@@ -19,11 +19,7 @@ R = [82, 114]
 
 class TUI:
     """A TUI client for pdbox."""
-    def __init__(self, **kwargs):
-        # Namespace to pass to pdbox functions.
-        # TODO: Make this stuff properly configurable.
-        self.kwargs = kwargs
-
+    def __init__(self):
         # Local file view.
         localwin = curses.initscr()
         localwin.resize(curses.LINES - 1, math.ceil(curses.COLS / 2))
@@ -43,12 +39,10 @@ class TUI:
         self.local = WorkingDirectory(
             pdbox.models.get_local(os.curdir),
             localwin,
-            self.kwargs,
         )
         self.remote = WorkingDirectory(
             pdbox.models.get_remote("/"),
             remotewin,
-            self.kwargs,
         )
 
         self.status = curses.newwin(1, curses.COLS, 0, 0)  # Status bar.
@@ -212,7 +206,7 @@ class TUI:
 
 class WorkingDirectory:
     """A working directory being displayed on screen."""
-    def __init__(self, folder, win, kwargs):
+    def __init__(self, folder, win):
         self.folder = folder  # RemoteFolder or LocalFolder.
         self.win = win  # ncurses window.
         self.contents = None  # None until TUI.reload is called.
@@ -224,7 +218,6 @@ class WorkingDirectory:
         # but 1-indexed with respect to the folder contents (contents begin
         # on row 1).
         self.cursor = 1
-        self.kwargs = kwargs
 
     def display(self):
         """Display the contents of this directory on screen."""
@@ -252,9 +245,9 @@ class WorkingDirectory:
     def reload(self):
         """Reload the contents of this directory."""
         try:
-            self.contents = self.folder.contents(**self.kwargs)
+            self.contents = self.folder.contents()
         except Exception as e:
-            pdbox.debug(e, **self.kwargs)
+            pdbox.debug(e)
             self.contents = None
             self.length = 0
         else:

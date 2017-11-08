@@ -9,7 +9,7 @@ class DropboxError(BaseException):
     pass
 
 
-def execute(func, *args, quiet=False, only_show_errors=False, **kwargs):
+def execute(func, *args, **kwargs):
     """
     Execute a dropbox.Dropbox method and return its output, logging its error
     if it raises.
@@ -19,32 +19,28 @@ def execute(func, *args, quiet=False, only_show_errors=False, **kwargs):
         return func(*args, **kwargs)
     except dropbox.exceptions.ApiError as e:
         pdbox.debug(
-            "API error:\n  Function: dbx.%s\n  Arguments: %s\n  Error: %s" %
-            (func.__name__, args, e.error),
-            quiet=quiet,
-            only_show_errors=only_show_errors,
+            "API error:\n  Function: dbx.%s\n  Arguments: %s %s\n  Error: %s" %
+            (func.__name__, args, kwargs, e.error),
         )
         raise DropboxError(e.error)
     except dropbox.exceptions.BadInputError as e:
         # This is usually an invalid token.
-        pdbox.debug(e, quiet=quiet, only_show_errors=only_show_errors)
+        pdbox.debug(e)
         fail(
             "Your authentication token is invalid, "
             "delete %s and try again" % pdbox.TOKEN_PATH,
-            quiet=quiet,
-            only_show_errors=only_show_errors,
         )
 
 
-def fail(s, **kwargs):
+def fail(s):
     """Log s as an error and exit."""
-    pdbox.error(s, **kwargs)
+    pdbox.error(s)
     sys.exit(1)
 
 
-def overwrite(path, **kwargs):
+def overwrite(path):
     """Get user confirmation for a file/folder overwrite."""
-    if kwargs.get("quiet") or kwargs.get("only_show_errors"):
+    if pdbox._args.get("quiet") or pdbox._args.get("only_show_errors"):
         return True
 
     try:

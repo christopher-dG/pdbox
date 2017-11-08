@@ -1,4 +1,3 @@
-import dropbox
 import os
 import pdbox
 import requests
@@ -6,34 +5,26 @@ import requests
 from pdbox.utils import fail, input_compat
 
 
-def get_token(**kwargs):
+def get_token():
     """
     Get the user's OAuth2 token.
     If we don't find one, then generate one.
     """
     try:
         with open(pdbox.TOKEN_PATH) as f:
-            pdbox.debug("Using token from file", **kwargs)
+            pdbox.debug("Using token from file")
             token = f.read()
     except Exception:  # File probably doesn't exist, so get a new token.
-        pdbox.debug("Generating new token", **kwargs)
+        pdbox.debug("Generating new token")
         try:
-            token = auth_flow(**kwargs)
+            token = auth_flow()
         except Exception as e:
-            pdbox.debug(e, **kwargs)
-            fail("Authentication failed; exiting", **kwargs)
+            pdbox.debug(e)
+            fail("Authentication failed; exiting")
     return token
 
 
-def login(token):
-    """
-    Log in to the Dropbox client.
-    Raises: AssertionError
-    """
-    pdbox.dbx = dropbox.Dropbox(token, timeout=None)
-
-
-def auth_flow(**kwargs):
+def auth_flow():
     """
     Get an auth code from the user, then send it to an API Gateway endpoint to
     authorize with the app.
@@ -52,12 +43,12 @@ def auth_flow(**kwargs):
         code = input_compat(prompt)
     except KeyboardInterrupt:
         print("")
-        fail("Cancelled", **kwargs)
+        fail("Cancelled")
 
     # Call the authentication API to generate a token.
     response = requests.get("%s?c=%s" % (endpoint, code))
     if response.status_code != 200 or response.text == "server error":
-        fail("Authorization failed", **kwargs)
+        fail("Authorization failed")
 
     token = response.text
     # Write the token to a file.
@@ -65,6 +56,6 @@ def auth_flow(**kwargs):
         os.makedirs(os.path.dirname(pdbox.TOKEN_PATH))
     with open(pdbox.TOKEN_PATH, "w") as f:
         f.write(token)
-        pdbox.debug("Created new token at %s" % pdbox.TOKEN_PATH, **kwargs)
+        pdbox.debug("Created new token at %s" % pdbox.TOKEN_PATH)
 
     return token
