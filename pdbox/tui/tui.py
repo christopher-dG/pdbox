@@ -5,6 +5,18 @@ import math
 import os
 import pdbox
 
+UP = [curses.KEY_UP]
+DOWN = [curses.KEY_DOWN]
+LEFT = [curses.KEY_LEFT]
+RIGHT = [curses.KEY_RIGHT]
+SPACE = [32]
+ENTER = [10]
+B = [66, 98]
+H = [72, 104]
+I = [73, 105]
+Q = [81, 113]
+R = [82, 114]
+
 
 class TUI:
     """A TUI client for pdbox."""
@@ -51,10 +63,10 @@ class TUI:
 
         self.status = curses.newwin(1, curses.COLS, 0, 0)  # Status bar.
         self.status.keypad(1)
-        self.status.addstr("Nothing selected")
 
         self.selected = None  # Currently selected item(s).
         self.active = self.local  # Currently focused window.
+        self.inactive = self.remote  # The other window.
 
         curses.curs_set(0)
         curses.wrapper(self.run)
@@ -74,34 +86,61 @@ class TUI:
         except KeyboardInterrupt:
             return None
 
-        self.status.erase()
-
-        if c == curses.KEY_UP:
+        if c in Q:
+            return None
+        if c in UP:
             self.active.moveup()
-        elif c == curses.KEY_DOWN:
+        elif c in DOWN:
             self.active.movedown()
-        elif c == curses.KEY_LEFT:
+        elif c in LEFT:
             self.active = self.local
+            self.inactive = self.remote
             self.remote.win.erase()
-        elif c == curses.KEY_RIGHT:
+        elif c in RIGHT:
             self.active = self.remote
+            self.inactive = self.local
             self.local.win.erase()
-        elif c == 82 or c == 114:  # 'r'/'R'.
-            self.reload()
-        elif c == 32:  # Space bar.
+        elif c in SPACE:
+            self.inactive.selected.clear()
             self.active.select()
-        elif c == 10:  # Enter.
+        elif c in ENTER:
             self.active.cd()
-        elif c == 66 or c == 98:  # 'b'/'B'.
+        elif c in B:
             self.active.back()
-        else:
-            self.status.addstr(0, 2, "Unrecognized command: %d" % c)
+        elif c in R:
+            self.reload()
+        elif c in H:
+            self.help()
+        elif c in I:
+            self.command(self.getinput("pdbox>"))
 
-        return 1
+        return True
+
+    def help(self):
+        pass  # TODO
+
+    def command(self, cmd):
+        if not cmd:
+            return
+        try:
+            cmd, args = cmd.split(maxsplit=1)
+        except ValueError:
+            pass
+
+        if cmd in ["search", "find"]:
+            pass  # TODO: Search for args.
+        elif cmd in ["copy", "cp"]:
+            pass  # TODO: Copy inactive selection to active window.
+        elif cmd in ["move", "mv"]:
+            pass  # TODO: Move inactive selection to active window.
+        elif cmd in ["delete", "del", "remove", "rm", "rmdir"]:
+            pass  # TODO: Delete active selection.
+        elif cmd in ["share", "link"]:
+            pass  # TODO: Generate sharing link (put this in library).
 
     def getinput(self, prompt):
         # Shorten the content windows by one line to show the input bar.
-        y, x = self.active.getmaxyx()  # Both will always be the same height.
+        y, x = self.active.win.getmaxyx()  # Both will be the same height.
         self.local.win.resize(y - 1, x)
         self.remote.win.resize(y - 1, x)
 
@@ -113,9 +152,14 @@ class TUI:
         inputbar.addstr(0, 1, prompt)
         self.refresh(inputbar)
 
-        cmd = textpad.edit()[len(prompt) + 1:]
+        curses.curs_set(1)
+        try:
+            cmd = textpad.edit()[len(prompt) + 1:]
+        except KeyboardInterrupt:
+            cmd = ""
+        curses.curs_set(0)
 
-        y, x = self.active.getmaxyx()
+        y, x = self.active.win.getmaxyx()
         self.local.win.resize(y + 1, x)
         self.remote.win.resize(y + 1, x)
 
@@ -126,7 +170,7 @@ class TUI:
         self.remote.win.deleteln()
 
         self.refresh()
-        return cmd
+        return cmd.lower().strip()
 
     def borders(self):
         """Draw borders on the main windows."""
@@ -159,11 +203,20 @@ class TUI:
         self.remote.reload()
         self.refresh()
 
+    def nselected(self):
+        self.status.erase()
+        s = "%d selected" % len(self.active.selected)
+        if self.active == self.local:
+            self.status.addstr(0, 2, s)
+        else:
+            self.status.addstr(0, self.status.getmaxyx()[1] - 2 - len(s), s)
+
     def display(self):
         """Display the contents of the working directories on screen."""
         self.local.display()
         self.remote.display()
         self.active.highlight()
+        # self.nselected()
         self.refresh()
 
 
@@ -284,9 +337,11 @@ class WorkingDirectory:
         if is_folder(entry):
             self.folder = entry
             self.reload()
+            self.selected.clear()
 
     def back(self):
         """Go to the parent directory."""
+        self.selected.clear()
         if not is_folder(self.folder):
             return
         try:

@@ -36,3 +36,10 @@ def test_overwrite():
     # TODO: Find a way to write to stdin.
     overwrite = utils.overwrite
     assert overwrite(testfile, fa)
+
+
+def test_dbx_uri():
+    dbx_uri = utils.dbx_uri
+    assert dbx_uri("") == "dbx://"
+    assert dbx_uri("/") == "dbx://"
+    assert dbx_uri(os.path.join("hello", "world")) == "dbx://hello/world"

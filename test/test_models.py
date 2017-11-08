@@ -5,17 +5,13 @@ from nose.tools import assert_raises
 from . import FakeArgs, nofile, testfile, testdir, tempfile, tempdir
 
 
-def test_local_file():
+def test_cli():
     LocalFile = models.LocalFile
-
     assert_raises(ValueError, LocalFile, nofile)
-
     assert_raises(ValueError, LocalFile, testdir)
-
     f = LocalFile(testfile)
     assert f.path == os.path.join(os.getcwd(), testfile)
     assert f.size == 0
-
     contents = "asdfjkl;"
     with open(tempfile, "w") as fd:
         fd.write(contents)
