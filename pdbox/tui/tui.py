@@ -1,4 +1,3 @@
-import argparse
 import curses
 import curses.textpad
 import math
@@ -20,19 +19,10 @@ R = [82, 114]
 
 class TUI:
     """A TUI client for pdbox."""
-    def __init__(self, _):
+    def __init__(self, **kwargs):
         # Namespace to pass to pdbox functions.
         # TODO: Make this stuff properly configurable.
-        self.args = argparse.Namespace(
-            dryrun=False,
-            quiet=False,
-            follow_symlinks=True,
-            only_show_errors=False,
-            delete=False,
-            chunksize=149.0,
-            recursive=False,
-            force=False,
-        )
+        self.kwargs = kwargs
 
         # Local file view.
         localwin = curses.initscr()
@@ -53,12 +43,12 @@ class TUI:
         self.local = WorkingDirectory(
             pdbox.models.get_local(os.curdir),
             localwin,
-            self.args,
+            self.kwargs,
         )
         self.remote = WorkingDirectory(
             pdbox.models.get_remote("/"),
             remotewin,
-            self.args,
+            self.kwargs,
         )
 
         self.status = curses.newwin(1, curses.COLS, 0, 0)  # Status bar.
@@ -222,7 +212,7 @@ class TUI:
 
 class WorkingDirectory:
     """A working directory being displayed on screen."""
-    def __init__(self, folder, win, args):
+    def __init__(self, folder, win, kwargs):
         self.folder = folder  # RemoteFolder or LocalFolder.
         self.win = win  # ncurses window.
         self.contents = None  # None until TUI.reload is called.
@@ -234,7 +224,7 @@ class WorkingDirectory:
         # but 1-indexed with respect to the folder contents (contents begin
         # on row 1).
         self.cursor = 1
-        self.args = args
+        self.kwargs = kwargs
 
     def display(self):
         """Display the contents of this directory on screen."""
@@ -262,9 +252,9 @@ class WorkingDirectory:
     def reload(self):
         """Reload the contents of this directory."""
         try:
-            self.contents = self.folder.contents(self.args)
+            self.contents = self.folder.contents(**self.kwargs)
         except Exception as e:
-            pdbox.debug(e)
+            pdbox.debug(e, **self.kwargs)
             self.contents = None
             self.length = 0
         else:

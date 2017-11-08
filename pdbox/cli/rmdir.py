@@ -4,49 +4,49 @@ from pdbox.models import get_remote, RemoteFolder
 from pdbox.utils import DropboxError, dbx_uri
 
 
-def rmdir(args):
+def rmdir(**kwargs):
     """
     Delete one or more folders inside Dropbox.
 
-    args fields:
-    - path (string)
+    kwargs:
+    - path (list[string])
     - dryrun (bool)
     - force (bool)
     """
     success = True
 
-    for path in args.path:
+    for path in kwargs["path"]:
         try:
-            remote = get_remote(path, args)
+            remote = get_remote(path, **kwargs)
         except ValueError:
-            pdbox.error("%s was not found" % dbx_uri(path), args)
+            pdbox.error("%s was not found" % dbx_uri(path), **kwargs)
             success = False
             continue
 
         if not isinstance(remote, RemoteFolder):
             pdbox.error(
                 "%s is not a folder: use rm to delete files" % remote.uri,
-                args,
+                **kwargs,
             )
             success = False
             continue
 
-        if args.force:
+        if kwargs["force"]:
             try:
-                remote.delete(args)
+                remote.delete(**kwargs)
                 continue
             except DropboxError:
-                pdbox.error("%s could not be deleted" % remote.uri, args)
+                pdbox.error("%s could not be deleted" % remote.uri, **kwargs)
                 success = False
                 continue
 
         try:
-            contents = remote.contents(args)
+            contents = remote.contents(**kwargs)
         except DropboxError:
             pdbox.error(
                 "Not deleting: couldn't get contents of %s "
                 "and --force is not set" % remote.uri,
-                args,
+                **kwargs,
             )
             success = False
             continue
@@ -54,15 +54,15 @@ def rmdir(args):
             pdbox.error(
                 "%s is not empty and --force is not set"
                 % remote.uri,
-                args,
+                **kwargs,
             )
             success = False
             continue
 
         try:
-            remote.delete(args)
+            remote.delete(**kwargs)
         except DropboxError:
-            pdbox.error("%s could not be deleted" % remote.uri, args)
+            pdbox.error("%s could not be deleted" % remote.uri, **kwargs)
             success = False
 
     return success

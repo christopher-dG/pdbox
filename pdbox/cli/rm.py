@@ -4,11 +4,12 @@ from pdbox.models import get_remote, RemoteFile
 from pdbox.utils import DropboxError, dbx_uri
 
 
-def rm(args):
+def rm(**kwargs):
     """
     Delete one or more files or directories inside Dropbox.
 
-    args fields:
+    kwargs:
+    - path(list[string])
     - dryrun (bool)
     - quiet (bool)
     - recursive (bool)
@@ -16,26 +17,29 @@ def rm(args):
     """
     success = True
 
-    for path in args.path:
+    for path in kwargs["path"]:
         try:
-            remote = get_remote(path, args)
+            remote = get_remote(path, **kwargs)
         except ValueError:
-            pdbox.error("%s could not be found" % dbx_uri(args.path), args)
+            pdbox.error(
+                "%s could not be found" % dbx_uri(kwargs["path"]),
+                **kwargs,
+            )
             success = False
             continue
 
-        if not isinstance(remote, RemoteFile) and not args.recursive:
+        if not isinstance(remote, RemoteFile) and not kwargs["recursive"]:
             pdbox.error(
                 "%s is a folder and --recursive is not set" % remote.uri,
-                args,
+                **kwargs,
             )
             success = False
             continue
 
         try:
-            remote.delete(args)
+            remote.delete(**kwargs)
         except DropboxError:
-            pdbox.error("%s could not be deleted" % remote.uri, args)
+            pdbox.error("%s could not be deleted" % remote.uri, **kwargs)
             success = False
 
     return success

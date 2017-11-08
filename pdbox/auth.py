@@ -6,22 +6,22 @@ import requests
 from pdbox.utils import fail, input_compat
 
 
-def get_token(args):
+def get_token(**kwargs):
     """
     Get the user's OAuth2 token.
     If we don't find one, then generate one.
     """
     try:
         with open(pdbox.TOKEN_PATH) as f:
-            pdbox.debug("Using token from file", args)
+            pdbox.debug("Using token from file", **kwargs)
             token = f.read()
     except Exception:  # File probably doesn't exist, so get a new token.
-        pdbox.debug("Generating new token", args)
+        pdbox.debug("Generating new token", **kwargs)
         try:
-            token = auth_flow(args)
+            token = auth_flow(**kwargs)
         except Exception as e:
-            pdbox.debug(e, args)
-            fail("Authentication failed; exiting", args)
+            pdbox.debug(e, **kwargs)
+            fail("Authentication failed; exiting", **kwargs)
     return token
 
 
@@ -33,7 +33,7 @@ def login(token):
     pdbox.dbx = dropbox.Dropbox(token, timeout=None)
 
 
-def auth_flow(args):
+def auth_flow(**kwargs):
     """
     Get an auth code from the user, then send it to an API Gateway endpoint to
     authorize with the app.
@@ -52,12 +52,12 @@ def auth_flow(args):
         code = input_compat(prompt)
     except KeyboardInterrupt:
         print("")
-        fail("Cancelled", args)
+        fail("Cancelled", **kwargs)
 
     # Call the authentication API to generate a token.
     response = requests.get("%s?c=%s" % (endpoint, code))
     if response.status_code != 200 or response.text == "server error":
-        fail("Authorization failed", args)
+        fail("Authorization failed", **kwargs)
 
     token = response.text
     # Write the token to a file.
@@ -65,6 +65,6 @@ def auth_flow(args):
         os.makedirs(os.path.dirname(pdbox.TOKEN_PATH))
     with open(pdbox.TOKEN_PATH, "w") as f:
         f.write(token)
-        pdbox.debug("Created new token at %s" % pdbox.TOKEN_PATH, args)
+        pdbox.debug("Created new token at %s" % pdbox.TOKEN_PATH, **kwargs)
 
     return token

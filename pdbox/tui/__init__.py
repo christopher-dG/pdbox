@@ -1,6 +1,6 @@
 from .tui import TUI
 
 
-def run(args):
-    TUI(args)
-    # print("Thanks for using pdbox!")
+def run(**kwargs):
+    TUI(**kwargs)
+    print("Thanks for using pdbox!")

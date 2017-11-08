@@ -9,11 +9,10 @@ class DropboxError(BaseException):
     pass
 
 
-def execute(ns, func, *args, **kwargs):
+def execute(func, *args, quiet=False, only_show_errors=False, **kwargs):
     """
     Execute a dropbox.Dropbox method and return its output, logging its error
-    if it raises. First argument is an argparse.Namespace, second is the
-    method to call.
+    if it raises.
     Raises: DropboxError
     """
     try:
@@ -22,32 +21,31 @@ def execute(ns, func, *args, **kwargs):
         pdbox.debug(
             "API error:\n  Function: dbx.%s\n  Arguments: %s\n  Error: %s" %
             (func.__name__, args, e.error),
-            ns,
+            quiet=quiet,
+            only_show_errors=only_show_errors,
         )
         raise DropboxError(e.error)
     except dropbox.exceptions.BadInputError as e:
         # This is usually an invalid token.
-        pdbox.debug(e, ns)
+        pdbox.debug(e, quiet=quiet, only_show_errors=only_show_errors)
         fail(
             "Your authentication token is invalid, "
             "delete %s and try again" % pdbox.TOKEN_PATH,
-            args,
+            quiet=quiet,
+            only_show_errors=only_show_errors,
         )
 
 
-def fail(s, args=None):
+def fail(s, **kwargs):
     """Log s as an error and exit."""
-    pdbox.error(s, args)
+    pdbox.error(s, **kwargs)
     sys.exit(1)
 
 
-def overwrite(path, args=None):
+def overwrite(path, **kwargs):
     """Get user confirmation for a file/folder overwrite."""
-    try:
-        if args.quiet or args.only_show_errors:
-            return True
-    except AttributeError:
-        pass
+    if kwargs.get("quiet") or kwargs.get("only_show_errors"):
+        return True
 
     try:
         confirm = input_compat("File %s exists: overwrite? [y/N] " % path)

@@ -2,10 +2,7 @@ import os
 import pdbox.utils as utils
 
 from nose.tools import assert_raises
-from . import FakeArgs, nofile, testfile
-
-
-fa = FakeArgs(quiet=True)
+from . import nofile, testfile
 
 
 def test_normpath():
@@ -28,14 +25,15 @@ def test_isize():
 
 def test_execute():
     execute = utils.execute
-    assert_raises(Exception, execute, fa, os.stat, nofile)
-    assert isinstance(execute(fa, os.stat, testfile), os.stat_result)
+    assert_raises(Exception, execute,  os.stat, nofile)
+    assert isinstance(execute(os.stat, testfile), os.stat_result)
 
 
 def test_overwrite():
     # TODO: Find a way to write to stdin.
     overwrite = utils.overwrite
-    assert overwrite(testfile, fa)
+    assert overwrite(testfile, quiet=True)
+    assert overwrite(testfile, only_show_errors=True)
 
 
 def test_dbx_uri():

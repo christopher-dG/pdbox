@@ -12,39 +12,27 @@ _logger.addHandler(_handler)
 
 # This is all really gross and hacky.
 
-def debug(s, args=None):
+def debug(s, **kwargs):
     """Log a debug message."""
-    try:
-        if not args.quiet and not args.only_show_errors:
-            _logger.debug(s)
-    except AttributeError:
+    if not kwargs.get("quiet") and not kwargs.get("only_show_errors"):
         _logger.debug(s)
 
 
-def info(s, args=None):
+def info(s, **kwargs):
     """Log an info message."""
-    try:
-        if not args.quiet and not args.only_show_errors:
-            _logger.info(s)
-    except AttributeError:
+    if not kwargs.get("quiet") and not kwargs.get("only_show_errors"):
         _logger.info(s)
 
 
-def warn(s, args=None):
+def warn(s, **kwargs):
     """Log a warning message."""
-    try:
-        if not args.quiet:
-            _logger.warn(s)
-    except AttributeError:
+    if not kwargs.get("quiet") and not kwargs.get("only_show_errors"):
         _logger.warn(s)
 
 
-def error(s, args=None):
+def error(s, **kwargs):
     """Log an error message."""
-    try:
-        if not args.quiet:
-            _logger.error(s)
-    except AttributeError:
+    if not kwargs.get("quiet") and not kwargs.get("only_show_errors"):
         _logger.error(s)
 
 
