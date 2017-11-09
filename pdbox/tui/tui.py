@@ -4,17 +4,17 @@ import math
 import os
 import pdbox
 
-UP = [curses.KEY_UP]
-DOWN = [curses.KEY_DOWN]
-LEFT = [curses.KEY_LEFT]
-RIGHT = [curses.KEY_RIGHT]
-SPACE = [32]
-ENTER = [10]
-B = [66, 98]
-H = [72, 104]
-I = [73, 105]
-Q = [81, 113]
-R = [82, 114]
+KEY_UP = [curses.KEY_UP]
+KEY_DOWN = [curses.KEY_DOWN]
+KEY_LEFT = [curses.KEY_LEFT]
+KEY_RIGHT = [curses.KEY_RIGHT]
+KEY_SPACE = [32]
+KEY_ENTER = [10]
+KEY_B = [66, 98]
+KEY_H = [72, 104]
+KEY_I = [73, 105]
+KEY_Q = [81, 113]
+KEY_R = [82, 114]
 
 
 class TUI:
@@ -70,32 +70,32 @@ class TUI:
         except KeyboardInterrupt:
             return None
 
-        if c in Q:
+        if c in KEY_Q:
             return None
-        if c in UP:
+        if c in KEY_UP:
             self.active.moveup()
-        elif c in DOWN:
+        elif c in KEY_DOWN:
             self.active.movedown()
-        elif c in LEFT:
+        elif c in KEY_LEFT:
             self.active = self.local
             self.inactive = self.remote
             self.remote.win.erase()
-        elif c in RIGHT:
+        elif c in KEY_RIGHT:
             self.active = self.remote
             self.inactive = self.local
             self.local.win.erase()
-        elif c in SPACE:
+        elif c in KEY_SPACE:
             self.inactive.selected.clear()
             self.active.select()
-        elif c in ENTER:
+        elif c in KEY_ENTER:
             self.active.cd()
-        elif c in B:
+        elif c in KEY_B:
             self.active.back()
-        elif c in R:
+        elif c in KEY_R:
             self.reload()
-        elif c in H:
+        elif c in KEY_H:
             self.help()
-        elif c in I:
+        elif c in KEY_I:
             self.command(self.getinput("pdbox>"))
 
         return True
