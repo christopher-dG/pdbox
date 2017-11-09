@@ -29,13 +29,6 @@ def test_execute():
     assert isinstance(execute(os.stat, testfile), os.stat_result)
 
 
-def test_overwrite():
-    # TODO: Find a way to write to stdin.
-    overwrite = utils.overwrite
-    assert overwrite(testfile, quiet=True)
-    assert overwrite(testfile, only_show_errors=True)
-
-
 def test_dbx_uri():
     dbx_uri = utils.dbx_uri
     assert dbx_uri("") == "dbx://"

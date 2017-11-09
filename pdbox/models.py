@@ -532,7 +532,7 @@ class LocalFolder(object):
         """Get this folder's contents locally."""
         entries = []
         walk = next(os.walk(self.path))
-        entries.extend(LocalFolder(os.path.join(walk[0], f) for f in walk[1]))
+        entries.extend(LocalFolder(os.path.join(walk[0], f)) for f in walk[1])
         entries.extend(LocalFile(os.path.join(walk[0], f)) for f in walk[2])
         return entries
 
