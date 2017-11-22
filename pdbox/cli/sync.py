@@ -14,7 +14,7 @@ def sync():
     - only_show_errors (bool)
     - delete (bool)
     """
-    src, dest = pdbox._args["src"], pdbox._args["dest"]
+    src, dest = pdbox._args["src"], pdbox._args["dst"]
     if not pdbox.cli.validate_src_dest(src, dest):
         pdbox.error(
             "At least one of <source> or <destination> must be a Dropbox path "

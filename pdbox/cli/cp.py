@@ -98,6 +98,7 @@ def cp_from(src, dest):
     except ValueError as e:
         pdbox.debug(e)
         pdbox.error("Couldn't find %s" % dbx_uri(src))
+        return False
 
     if not isinstance(remote, RemoteFile) and not pdbox._args["recursive"]:
         pdbox.error("%s is a folder and --recursive is not set" % remote.uri)

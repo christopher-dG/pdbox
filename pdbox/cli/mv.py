@@ -19,7 +19,7 @@ def mv():
     - recursive (bool)
     - chunksize (float)
     """
-    src_list, dest = pdbox._args["src"], pdbox._args["dest"]
+    src_list, dest = pdbox._args["src"], pdbox._args["dst"]
     if len(src_list) > 1 and not pdbox.cli.assert_is_folder(dest):
         pdbox.error(
             "%s is not a folder; can't move multiple items here" % dest,
