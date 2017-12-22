@@ -266,6 +266,7 @@ class RemoteFolder(RemoteObject):
         self.name = meta.name  # Base name of the folder.
         self.uri = dbx_uri(self.path)  # Convenience field for display.
 
+    @staticmethod
     def create(path, overwrite=False):
         """
         Create a new folder in Dropbox.
@@ -506,6 +507,7 @@ class LocalFolder(object):
         self.islink = os.path.islink(self.path)  # If the path is a symlink.
         self.parent = os.path.dirname(self.path)  # Parent folder.
 
+    @staticmethod
     def create(path, overwrite=False):
         """
         Create a new folder locally.
